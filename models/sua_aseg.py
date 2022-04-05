@@ -18,6 +18,11 @@ FILLZERO = "0"
 FILLSPACE = " "
 REPLACELEFT = 'left'
 REPLACERIGHT = 'left'
+FIELDS_TO_UPPER_CASE=[
+    'registro_patronal_imss','reg_fed_de_contribuyentes','curp',
+    'nombre','apellido_paterno','apellido_materno',
+    'nombre_apellidopaterno_materno_nombre',
+    'clave_de_ubicacion','clave_de_municipio']
 
 # === Model sua.aseg for template of ASEG.txt===
 class SUAAseg(models.Model):
@@ -132,15 +137,19 @@ class SUAAseg(models.Model):
 # === Override ORM Methods sua.aseg for template of ASEG.txt===
     @api.model
     def create(self, values):
-        res = super(SUAAseg, self).create(values)
+        res = super(SUAAseg, self).create(self.to_upper_case(values))
         res._check_constrains_numero_de_credito_infonavit()
         return res
 
     @api.multi
     def write(self, values):
-        return super(SUAAseg, self).write(values)
+        return super(SUAAseg, self).write(self.to_upper_case(values))
     
-
+    def to_upper_case(self,dict):
+        for key, value in dict.items():
+            if key in dict.keys():
+                dict.update({key:value.upper()})
+        return dict
 
 # === Computed Fields Methods ===
     @api.depends('nombre','apellido_paterno','apellido_materno')
