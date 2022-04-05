@@ -11,6 +11,37 @@
             </field>
         </record>
 
+        <record id="sua_aseg_view_form" model="ir.ui.view">
+            <field name="name">Formulario Registros SUA</field>
+            <field name="model">sua.aseg</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                        <field name="registro_patronal_imss" style="text-transform:uppercase"/>
+                        <field name="numero_de_seguridad_social" />
+                        <field name="reg_fed_de_contribuyentes" style="text-transform:uppercase" />
+                        <field name="curp" style="text-transform:uppercase"/>
+                        <field name="nombre" style="text-transform:uppercase"/>
+                        <field name="apellido_paterno" style="text-transform:uppercase"/>
+                        <field name="apellido_materno" style="text-transform:uppercase"/>
+                        <field name="nombre_apellidopaterno_materno_nombre" style="text-transform:uppercase"/>
+                        <field name="tipo_de_trabajador" />
+                        <field name="jornada_semana_reducida" />
+                        <field name="fecha_de_alta" />
+                        <field name="salario_diario_integrado" />
+                        <field name="clave_de_ubicacion" style="text-transform:uppercase"/>
+                        <field name="numero_de_credito_infonavit" />
+                        <field name="fecha_de_inicio_de_descuento" />
+                        <field name="tipo_de_descuento" />
+                        <field name="valor_de_descuento" />
+                        <field name="tipo_de_pension" />
+                        <field name="clave_de_municipio" style="text-transform:uppercase"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
         <record id="sua_aseg_action" model="ir.actions.act_window">
             <field name="name">Formulario de Registros SUA</field>
             <field name="res_model">sua.aseg</field>

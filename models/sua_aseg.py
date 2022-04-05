@@ -27,7 +27,7 @@ class SUAAseg(models.Model):
     numero_de_seguridad_social = fields.Char(string='Número de Seguridad Social')
     reg_fed_de_contribuyentes = fields.Char(string='Registro Ferederal de Contribuyentes')
     curp = fields.Char(string='CURP')
-    nombre = fields.Char(string='Nombre(s)')
+    nombre = fields.Char(string='Nombre(s) Separados por Espacio',help='Ejemplo Kaleth Chalino Valentin')
     apellido_paterno = fields.Char(string='Apellido Paterno')
     apellido_materno = fields.Char(string='Apellido Materno')
     nombre_apellidopaterno_materno_nombre = fields.Char(compute='_compute_nombre_apellidopaterno_materno_nombre', string='Nombre Completo Formato SUA')    
@@ -44,6 +44,11 @@ class SUAAseg(models.Model):
     clave_de_municipio = fields.Char(string='Clave De Municipio')
 
 
+
+# === Onchange to Upper sua.aseg for template of ASEG.txt===
+# style="text-transform:uppercase"
+
+# === Constrains sua.aseg for template of ASEG.txt===
     @api.constrains('registro_patronal_imss','numero_de_seguridad_social')
     def _check_long_11(self):
         self.__ev_long(LONG11,self.registro_patronal_imss,self._fields['registro_patronal_imss'])
@@ -102,6 +107,8 @@ class SUAAseg(models.Model):
         self.__ev_long(LONG1,self.tipo_de_trabajador,self._fields['tipo_de_trabajador'])
         self.__ev_long(LONG1,self.jornada_semana_reducida,self._fields['jornada_semana_reducida'])
 
+
+# === Define Errors sua.aseg for template of ASEG.txt===
     @api.one
     def __ev_long(self,long,field_value="",field_name="undefined"):
         if isinstance(field_value, str):
@@ -109,7 +116,8 @@ class SUAAseg(models.Model):
                 raise ValidationError("El Campo {field_name} debe contener {long} Carácteres \n pero contiene {caracteres} Carácteres".format(field_name=field_name,long=long,caracteres=len(field_value)))
         else:
             raise ValidationError("El Campo {field_name} debe contener {long} Carácteres pero está vacío".format(field_name=field_name,long=long))   
-    
+
+# === Complete with spaces or 0, nothing must be null or incomplete  sua.aseg for template of ASEG.txt===
     def fill_empty_or_incomplete(self,char_to_fill,long,position,original_char=""):
         """Fills a string with a specific character, and long at left or right position"""
         if len(original_char)==long:
@@ -121,7 +129,7 @@ class SUAAseg(models.Model):
          
 
 
-
+# === Override ORM Methods sua.aseg for template of ASEG.txt===
     @api.model
     def create(self, values):
         res = super(SUAAseg, self).create(values)
@@ -129,7 +137,7 @@ class SUAAseg(models.Model):
         return res
 
     @api.multi
-    def write(self, values): 
+    def write(self, values):
         return super(SUAAseg, self).write(values)
     
 
