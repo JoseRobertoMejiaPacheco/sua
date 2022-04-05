@@ -30,6 +30,7 @@
                         <field name="jornada_semana_reducida" />
                         <field name="fecha_de_alta" />
                         <field name="salario_diario_integrado" />
+                        <field name="salario_diario_integrado_sua" />
                         <field name="clave_de_ubicacion" style="text-transform:uppercase"/>
                         <field name="numero_de_credito_infonavit" />
                         <field name="fecha_de_inicio_de_descuento" />

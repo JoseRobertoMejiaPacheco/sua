@@ -31,7 +31,7 @@ FIELDS_TO_STRIP=['registro_patronal_imss','reg_fed_de_contribuyentes','curp',
 class SUAAseg(models.Model):
     _name = 'sua.aseg'
     _description = 'Formato del Archivo de Importación de Trabajadores ASEG.txt'
-    registro_patronal_imss = fields.Char(string='Registro Patronal',default= lambda self: self.env['res.company']._company_default_get().registro_patronal)
+    registro_patronal_imss = fields.Char(string='Registro Patronal',default= lambda self: self.env.user.company_id.registro_patronal)
     numero_de_seguridad_social = fields.Char(string='Número de Seguridad Social')
     reg_fed_de_contribuyentes = fields.Char(string='Registro Ferederal de Contribuyentes')
     curp = fields.Char(string='CURP')
@@ -42,7 +42,23 @@ class SUAAseg(models.Model):
     tipo_de_trabajador = fields.Char(string='Tipo de Trabajador')
     jornada_semana_reducida = fields.Char(string='Jornada/Semana Reducida')
     fecha_de_alta = fields.Char(string='Fecha de Alta')
+
+    
     salario_diario_integrado = fields.Char(string='Salario Diario Integrado')
+    salario_diario_integrado_sua = fields.Char(compute='_compute_salario_diario_integrado_sua',string='Salario Diario Integrado Formato SUA')
+    
+
+    #api.one retorna new id
+    
+    @api.depends('salario_diario_integrado')
+    def _compute_salario_diario_integrado_sua(self):
+        if self.salario_diario_integrado:
+            string_value = self.salario_diario_integrado.replace('.', '')
+            removing_dot = string_value if  self.salario_diario_integrado else True
+            self.salario_diario_integrado_sua=self.fill_empty_or_incomplete(FILLZERO,LONG7,REPLACELEFT,removing_dot)
+        
+        
+    
     clave_de_ubicacion = fields.Char(string='Clave De Ubicacion',default=CLAVE_DE_UBICACION)
     numero_de_credito_infonavit = fields.Char(string='Número De Crédito Infonavit')
     fecha_de_inicio_de_descuento = fields.Char(string='Fecha de Inicio de Descuento')
@@ -78,9 +94,6 @@ class SUAAseg(models.Model):
     def _check_long_8(self):
         self.__ev_long(LONG8,self.fecha_de_alta,self._fields['fecha_de_alta'])
 
-    @api.constrains('salario_diario_integrado')
-    def _check_long_7(self):
-        self.__ev_long(LONG7,self.salario_diario_integrado,self._fields['salario_diario_integrado'])
 
     @api.constrains('clave_de_ubicacion')
     def _check_long_17(self):
@@ -115,10 +128,9 @@ class SUAAseg(models.Model):
         self.__ev_long(LONG1,self.tipo_de_trabajador,self._fields['tipo_de_trabajador'])
         self.__ev_long(LONG1,self.jornada_semana_reducida,self._fields['jornada_semana_reducida'])
     
-    @api.one
-    def _check_strip_fields(self):
-        name = self.nombre.strip()
-        self.nombre = name
+    @api.constrains('salario_diario_integrado')
+    def _check_long_7(self):
+        self.__ev_long(LONG7,self.salario_diario_integrado_sua,self._fields['salario_diario_integrado_sua'])
             
     
 
@@ -140,9 +152,9 @@ class SUAAseg(models.Model):
         if len(original_char)==long:
             return original_char
         elif position=="left":
-            return original_char.ljust(long,char_to_fill)
-        elif position=="right":
             return original_char.rjust(long,char_to_fill)
+        elif position=="right":
+            return original_char.ljust(long,char_to_fill)
          
 
 
@@ -155,12 +167,16 @@ class SUAAseg(models.Model):
 
     @api.multi
     def write(self, values):
-        return super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
+        """"update values for new"""
+        res= super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
+        # if 'salario_diario_integrado' in values.keys():
+        #     self._compute_salario_diario_integrado_sua()
     
     def remove_spaces_and_upper_case(self,dict):
         for key, value in dict.items():
             if key in dict.keys():
-                dict.update({key:self.remove_spaces_alum(value.upper(),key)})
+                if not value.isdigit():
+                    dict.update({key:self.remove_spaces_alum(value.upper(),key)})
         return dict
 
 
@@ -175,21 +191,20 @@ class SUAAseg(models.Model):
                 return string.strip()
             else:
                 return string
+            
+
 
 # === Computed Fields Methods ===
     @api.one
     @api.depends('nombre','apellido_paterno','apellido_materno')
     def _compute_nombre_apellidopaterno_materno_nombre(self):
-        try:
-                        
+        try:                        
             if not self.apellido_paterno:
                 full_name_formatted=self.apellido_materno+NAME_SEPARATOR+NAME_SEPARATOR+self.nombre
-                self.nombre_apellidopaterno_materno_nombre = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,full_name_formatted)
-                print(len(self.nombre_apellidopaterno_materno_nombre))
+                self.nombre_apellidopaterno_materno_nombre = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,full_name_formatted)                
             else:
                 full_name_formatted = self.apellido_materno+NAME_SEPARATOR+self.apellido_paterno+NAME_SEPARATOR+self.nombre
-                self.nombre_apellidopaterno_materno_nombre = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,full_name_formatted)
-                print(len(self.nombre_apellidopaterno_materno_nombre))
+                self.nombre_apellidopaterno_materno_nombre = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,full_name_formatted)                
         except Exception as inst:
             print(inst)
 
