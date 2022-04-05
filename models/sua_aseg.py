@@ -1,4 +1,4 @@
-from pickletools import long1
+import string
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -7,6 +7,7 @@ CREDITO_INFONAVIT = False
 LONG10 = 10
 LONG17 = 17
 LONG1 = 1
+LONG3 = 3
 LONG13 = 13
 LONG18 = 18
 LONG50 = 50
@@ -45,40 +46,48 @@ class SUAAseg(models.Model):
 
     @api.constrains('registro_patronal_imss','numero_de_seguridad_social')
     def _check_long_11(self):
-        print(self)
+        self.__ev_long(LONG11,self.registro_patronal_imss,self._fields['registro_patronal_imss'])
+        self.__ev_long(LONG11,self.numero_de_seguridad_social,self._fields['numero_de_seguridad_social'])
 
     @api.constrains('reg_fed_de_contribuyentes')
     def _check_long_13(self):
-        print(self)
+        self.__ev_long(LONG13,self.reg_fed_de_contribuyentes,self._fields['reg_fed_de_contribuyentes'])
 
     @api.constrains('curp')
     def _check_long_18(self):
-        print(self)
+        self.__ev_long(LONG18,self.curp,self._fields['curp'])
 
     @api.constrains('nombre_apellidopaterno_materno_nombre')
     def _check_long_50(self):
-        print(self)
+        self.__ev_long(LONG50,self.nombre_apellidopaterno_materno_nombre,self._fields['nombre_apellidopaterno_materno_nombre'])
 
     @api.constrains('fecha_de_alta')
     def _check_long_8(self):
-        print(self)
+        self.__ev_long(LONG8,self.fecha_de_alta,self._fields['fecha_de_alta'])
 
     @api.constrains('salario_diario_integrado')
     def _check_long_7(self):
-        print(self)
+        self.__ev_long(LONG7,self.salario_diario_integrado,self._fields['salario_diario_integrado'])
 
     @api.constrains('clave_de_ubicacion')
     def _check_long_17(self):
-        print(self)
+        self.__ev_long(LONG17,self.clave_de_ubicacion,self._fields['clave_de_ubicacion'])
 
+    @api.constrains('clave_de_municipio')
+    def _check_long_3(self):
+        self.__ev_long(LONG3,self.clave_de_municipio,self._fields['clave_de_municipio'])
     @api.one
-    def _check_long_10(self):
+    def _check_constrains_numero_de_credito_infonavit(self):
+        """Constrains for main numero_de_credito_infonavit
+        and derivated constains fecha_de_inicio_de_descuento,
+        tipo_de_descuento, valor_de_descuento which
+        only must be considerated when numero_de_credito_infonavit isn't empty."""
         CREDITO_INFONAVIT = True if self.numero_de_credito_infonavit else  False
         if CREDITO_INFONAVIT:
-            self.__ev_long(self.numero_de_credito_infonavit,LONG10)
-            self.__ev_long(self.fecha_de_inicio_de_descuento,LONG8)
-            self.__ev_long(self.tipo_de_descuento,LONG1)
-            self.__ev_long(self.valor_de_descuento,LONG8)
+            self.__ev_long(LONG10,self.numero_de_credito_infonavit,self._fields['numero_de_credito_infonavit'])
+            self.__ev_long(LONG8,self.fecha_de_inicio_de_descuento,self._fields['fecha_de_inicio_de_descuento'])
+            self.__ev_long(LONG1,self.tipo_de_descuento,self._fields['tipo_de_descuento'])
+            self.__ev_long(LONG8,self.valor_de_descuento,self._fields['valor_de_descuento'])
         elif not CREDITO_INFONAVIT:
             self.numero_de_credito_infonavit=self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
             self.fecha_de_inicio_de_descuento=self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
@@ -89,16 +98,20 @@ class SUAAseg(models.Model):
 
     @api.constrains('tipo_de_pension','tipo_de_trabajador','jornada_semana_reducida')
     def _check_long_1(self):
-        print(self)
+        self.__ev_long(LONG1,self.tipo_de_pension,self._fields['tipo_de_pension'])
+        self.__ev_long(LONG1,self.tipo_de_trabajador,self._fields['tipo_de_trabajador'])
+        self.__ev_long(LONG1,self.jornada_semana_reducida,self._fields['jornada_semana_reducida'])
 
     @api.one
-    def __ev_long(self,field_value,long,field_name="undefined"):
-        if CREDITO_INFONAVIT:
+    def __ev_long(self,long,field_value="",field_name="undefined"):
+        if isinstance(field_value, str):
             if not len(field_value) == long:
-                raise ValidationError("El Campo ${field_name} debe contener ${long} Carácteres")
-
+                raise ValidationError("El Campo {field_name} debe contener {long} Carácteres \n pero contiene {caracteres} Carácteres".format(field_name=field_name,long=long,caracteres=len(field_value)))
+        else:
+            raise ValidationError("El Campo {field_name} debe contener {long} Carácteres pero está vacío".format(field_name=field_name,long=long))   
     
     def fill_empty_or_incomplete(self,char_to_fill,long,position,original_char=""):
+        """Fills a string with a specific character, and long at left or right position"""
         if len(original_char)==long:
             return original_char
         elif position=="left":
@@ -112,9 +125,13 @@ class SUAAseg(models.Model):
     @api.model
     def create(self, values):
         res = super(SUAAseg, self).create(values)
-        res._check_long_10()
+        res._check_constrains_numero_de_credito_infonavit()
         return res
 
+    @api.multi
+    def write(self, values): 
+        return super(SUAAseg, self).write(values)
+    
 
 
 # === Computed Fields Methods ===
