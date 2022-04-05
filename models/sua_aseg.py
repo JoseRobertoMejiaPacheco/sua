@@ -1,6 +1,6 @@
 import string
 from odoo import _, api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError,RedirectWarning
 
 CLAVE_DE_UBICACION = '                 '
 CREDITO_INFONAVIT = False
@@ -17,12 +17,15 @@ LONG11 = 11
 FILLZERO = "0"
 FILLSPACE = " "
 REPLACELEFT = 'left'
-REPLACERIGHT = 'left'
+REPLACERIGHT = 'right'
+NAME_SEPARATOR = '$'
 FIELDS_TO_UPPER_CASE=[
     'registro_patronal_imss','reg_fed_de_contribuyentes','curp',
     'nombre','apellido_paterno','apellido_materno',
     'nombre_apellidopaterno_materno_nombre',
     'clave_de_ubicacion','clave_de_municipio']
+FIELDS_TO_STRIP=['registro_patronal_imss','reg_fed_de_contribuyentes','curp',
+    'nombre','apellido_paterno','apellido_materno','clave_de_municipio']
 
 # === Model sua.aseg for template of ASEG.txt===
 class SUAAseg(models.Model):
@@ -111,6 +114,15 @@ class SUAAseg(models.Model):
         self.__ev_long(LONG1,self.tipo_de_pension,self._fields['tipo_de_pension'])
         self.__ev_long(LONG1,self.tipo_de_trabajador,self._fields['tipo_de_trabajador'])
         self.__ev_long(LONG1,self.jornada_semana_reducida,self._fields['jornada_semana_reducida'])
+    
+    @api.one
+    def _check_strip_fields(self):
+        name = self.nombre.strip()
+        self.nombre = name
+            
+    
+
+    
 
 
 # === Define Errors sua.aseg for template of ASEG.txt===
@@ -137,21 +149,50 @@ class SUAAseg(models.Model):
 # === Override ORM Methods sua.aseg for template of ASEG.txt===
     @api.model
     def create(self, values):
-        res = super(SUAAseg, self).create(self.to_upper_case(values))
+        res = super(SUAAseg, self).create(self.remove_spaces_and_upper_case(values))
         res._check_constrains_numero_de_credito_infonavit()
         return res
 
     @api.multi
     def write(self, values):
-        return super(SUAAseg, self).write(self.to_upper_case(values))
+        return super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
     
-    def to_upper_case(self,dict):
+    def remove_spaces_and_upper_case(self,dict):
         for key, value in dict.items():
             if key in dict.keys():
-                dict.update({key:value.upper()})
+                dict.update({key:self.remove_spaces_alum(value.upper(),key)})
         return dict
 
+
+
+
+    def remove_spaces_alum(self,string,key=False):
+        if string.isalnum():
+            if key in FIELDS_TO_STRIP:
+                return string.strip()            
+        else:
+            if key in FIELDS_TO_STRIP:
+                return string.strip()
+            else:
+                return string
+
 # === Computed Fields Methods ===
+    @api.one
     @api.depends('nombre','apellido_paterno','apellido_materno')
     def _compute_nombre_apellidopaterno_materno_nombre(self):
-        pass
+        try:
+                        
+            if not self.apellido_paterno:
+                full_name_formatted=self.apellido_materno+NAME_SEPARATOR+NAME_SEPARATOR+self.nombre
+                self.nombre_apellidopaterno_materno_nombre = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,full_name_formatted)
+                print(len(self.nombre_apellidopaterno_materno_nombre))
+            else:
+                full_name_formatted = self.apellido_materno+NAME_SEPARATOR+self.apellido_paterno+NAME_SEPARATOR+self.nombre
+                self.nombre_apellidopaterno_materno_nombre = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,full_name_formatted)
+                print(len(self.nombre_apellidopaterno_materno_nombre))
+        except Exception as inst:
+            print(inst)
+
+        
+
+
