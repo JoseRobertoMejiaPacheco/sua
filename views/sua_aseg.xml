@@ -28,6 +28,6 @@
         </record>
 
         <menuitem id="sua_aseg_root_menu" name="SUA" sequence="1" />
-        <menuitem id="sua_aseg_list" name="name" action="action_id" groups="groups_id" parent="parent_id" sequence="5" />
+        <menuitem id="sua_aseg_list" name="name" action="sua_aseg_action"  parent="sua_aseg_root_menu" sequence="5" />
     </data>
 </odoo>
