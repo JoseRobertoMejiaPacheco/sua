@@ -38,9 +38,16 @@ class SUAAseg(models.Model):
     nombre = fields.Char(string='Nombre(s) Separados por Espacio',help='Ejemplo Kaleth Chalino Valentin')
     apellido_paterno = fields.Char(string='Apellido Paterno')
     apellido_materno = fields.Char(string='Apellido Materno')
-    nombre_apellidopaterno_materno_nombre = fields.Char(compute='_compute_nombre_apellidopaterno_materno_nombre', string='Nombre Completo Formato SUA')    
-    tipo_de_trabajador = fields.Char(string='Tipo de Trabajador')
-    jornada_semana_reducida = fields.Char(string='Jornada/Semana Reducida')
+    nombre_apellidopaterno_materno_nombre = fields.Char(compute='_compute_nombre_apellidopaterno_materno_nombre', string='Nombre Completo Formato SUA')        
+    tipo_de_trabajador = fields.Selection(
+        string='Tipo de Trabajador',
+        selection=[('1', 'Trab. permanente'), ('2', ' Trab. Ev. Ciudad'),('3', 'Trab. Ev. Construcción'),('4', 'Eventual del campo')]
+    )
+    jornada_semana_reducida = fields.Selection(
+        string='Jornada/Semana Reducida',
+        selection=[('1', 'Un día'), ('2', 'Dos dias'),('3', 'Trab. Ev. Construcción'),('4', 'Cuatros días'),
+        ('5', 'Cinco días'),('6', 'Seis días'),('0', 'Jornada Normal')]
+    )    
     fecha_de_alta = fields.Char(string='Fecha de Alta')
 
     
@@ -62,10 +69,39 @@ class SUAAseg(models.Model):
     clave_de_ubicacion = fields.Char(string='Clave De Ubicacion',default=CLAVE_DE_UBICACION)
     numero_de_credito_infonavit = fields.Char(string='Número De Crédito Infonavit')
     fecha_de_inicio_de_descuento = fields.Char(string='Fecha de Inicio de Descuento')
-    tipo_de_descuento = fields.Char(string='Tipo de Descuento')
-    valor_de_descuento = fields.Char(string='Valor De Descuento')
-    tipo_de_pension = fields.Char(string='Tipo de Pension')
-    clave_de_municipio = fields.Char(string='Clave De Municipio')
+    tipo_de_descuento = fields.Selection(
+        string='Tipo de Descuento',
+        selection=[('1', 'Porcentaje'),('2', 'Cuota Fija Monetaria'),('3', 'Factor de descuento'),(' ', 'No Aplica')]
+    )
+    valor_de_descuento = fields.Char(string='Valor De Descuento',help="""
+    1 Porcentaje (00EEDD00, dos enteros y dos decimales)
+2 Cuota Fija Monetaria (EEEEEDD0, cinco enteros y dos decim ales)
+3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)""")
+    valor_de_descuento_sua = fields.Char(compute='_compute_valor_de_descuento',string='Valor De Descuento Formato SUA')
+    
+
+    @api.one
+    @api.depends('tipo_de_descuento','valor_de_descuento')
+    def _compute_valor_de_descuento(self):
+        if not self.valor_de_descuento:
+            self.valor_de_descuento=''
+        if self.tipo_de_descuento=='1':
+            self.valor_de_descuento_sua=FILLZERO*2+self.valor_de_descuento+FILLZERO*2
+        elif self.tipo_de_descuento=='2':
+            self.valor_de_descuento_sua = self.valor_de_descuento+FILLZERO
+        elif self.tipo_de_descuento=='3':
+            self.valor_de_descuento_sua=FILLZERO+self.valor_de_descuento
+        else:
+            self.valor_de_descuento_sua =self.fill_empty_or_incomplete(FILLZERO,LONG10,REPLACERIGHT)
+
+
+    
+    tipo_de_pension = fields.Selection(
+        string='Tipo de Pension',
+        selection=[('0', 'Tipo de Pensión'),('1', 'Pensión en Invalidez y Vida'),('2', 'Cesantía y Vejez')]
+    )
+
+    clave_de_municipio = fields.Char(string='Clave De Municipio',default= lambda self: self.env.user.company_id.registro_patronal[-3:])
 
 
 
@@ -113,11 +149,11 @@ class SUAAseg(models.Model):
             self.__ev_long(LONG10,self.numero_de_credito_infonavit,self._fields['numero_de_credito_infonavit'])
             self.__ev_long(LONG8,self.fecha_de_inicio_de_descuento,self._fields['fecha_de_inicio_de_descuento'])
             self.__ev_long(LONG1,self.tipo_de_descuento,self._fields['tipo_de_descuento'])
-            self.__ev_long(LONG8,self.valor_de_descuento,self._fields['valor_de_descuento'])
+            self.__ev_long(LONG8,self.valor_de_descuento_sua,self._fields['valor_de_descuento_sua'])
         elif not CREDITO_INFONAVIT:
             self.numero_de_credito_infonavit=self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
             self.fecha_de_inicio_de_descuento=self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
-            self.tipo_de_descuento=self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
+            self.tipo_de_descuento=self.fill_empty_or_incomplete(FILLSPACE,LONG1,REPLACERIGHT)
             self.valor_de_descuento=self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
 
 
@@ -169,14 +205,16 @@ class SUAAseg(models.Model):
     def write(self, values):
         """"update values for new"""
         res= super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
+        self._check_constrains_numero_de_credito_infonavit()
         # if 'salario_diario_integrado' in values.keys():
         #     self._compute_salario_diario_integrado_sua()
     
     def remove_spaces_and_upper_case(self,dict):
         for key, value in dict.items():
             if key in dict.keys():
-                if not value.isdigit():
-                    dict.update({key:self.remove_spaces_alum(value.upper(),key)})
+                if isinstance(value,str):
+                    if not value.isdigit():
+                        dict.update({key:self.remove_spaces_alum(value.upper(),key)})
         return dict
 
 
