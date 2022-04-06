@@ -30,6 +30,13 @@ FIELDS_TO_UPPER_CASE=[
 FIELDS_TO_STRIP=['registro_patronal_imss','reg_fed_de_contribuyentes','curp',
     'nombre','apellido_paterno','apellido_materno','clave_de_municipio']
 DEFAULT_NUMERO_CREDITO_INFONAVIT='          '
+
+
+
+
+
+
+
 # === Model sua.aseg for template of ASEG.txt===
 class SUAAseg(models.Model):
     _name = 'sua.aseg'
@@ -52,23 +59,8 @@ class SUAAseg(models.Model):
         ('5', 'Cinco días'),('6', 'Seis días'),('0', 'Jornada Normal')]
     )    
     fecha_de_alta = fields.Char(string='Fecha de Alta')
-
-    
     salario_diario_integrado = fields.Char(string='Salario Diario Integrado')
     salario_diario_integrado_sua = fields.Char(compute='_compute_salario_diario_integrado_sua',string='Salario Diario Integrado Formato SUA')
-    
-
-    #api.one retorna new id
-    
-    @api.depends('salario_diario_integrado')
-    def _compute_salario_diario_integrado_sua(self):
-        if self.salario_diario_integrado:
-            string_value = self.salario_diario_integrado.replace('.', '')
-            removing_dot = string_value if  self.salario_diario_integrado else True
-            self.salario_diario_integrado_sua=self.fill_empty_or_incomplete(FILLZERO,LONG7,REPLACELEFT,removing_dot)
-        
-        
-    
     clave_de_ubicacion = fields.Char(string='Clave De Ubicacion',default=CLAVE_DE_UBICACION)
     numero_de_credito_infonavit = fields.Char(string='Número De Crédito Infonavit',default=DEFAULT_NUMERO_CREDITO_INFONAVIT)
     fecha_de_inicio_de_descuento = fields.Char(string='Fecha de Inicio de Descuento',default=lambda self :self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT))
@@ -83,33 +75,10 @@ class SUAAseg(models.Model):
 3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)""")
     valor_de_descuento_sua = fields.Char(compute='_compute_valor_de_descuento',string='Valor De Descuento Formato SUA')
     complete_row_aseg = fields.Char(string='Registro Completo para Formato SUA Aseg.txt')
-
-    # Todo Fix: Separar Constrains, si uno falla, fallan todos
-    @api.one
-    @api.depends('valor_de_descuento','tipo_de_descuento')
-    def _compute_valor_de_descuento(self):
-        if self.tipo_de_descuento=='1':
-            if len(self.valor_de_descuento) == LONG4:
-                self.valor_de_descuento_sua=FILLZERO*2+self.valor_de_descuento+FILLZERO*2
-        elif self.tipo_de_descuento=='2':
-            if len(self.valor_de_descuento) == LONG7:
-                self.valor_de_descuento_sua = self.valor_de_descuento+FILLZERO
-        elif self.tipo_de_descuento=='3':
-            if len(self.valor_de_descuento) == LONG7:
-                self.valor_de_descuento_sua=FILLZERO+self.valor_de_descuento
-        else:
-            self.valor_de_descuento
-            self.valor_de_descuento_sua =self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
-            self.fecha_de_inicio_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)            
-            self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
-            self.tipo_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
-            self.valor_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
-    
     tipo_de_pension = fields.Selection(
         string='Tipo de Pension',
         selection=[('0', 'Sin Pensión'),('1', 'Pensión en Invalidez y Vida'),('2', 'Cesantía y Vejez')]
     )
-
     clave_de_municipio = fields.Char(string='Clave De Municipio',default= lambda self: self.env.user.company_id.registro_patronal[3:])
 
 
@@ -147,6 +116,17 @@ class SUAAseg(models.Model):
     @api.constrains('clave_de_municipio')
     def _check_long_3(self):
         self.__ev_long(LONG3,self.clave_de_municipio,self._fields['clave_de_municipio'])
+
+    @api.constrains('tipo_de_pension','tipo_de_trabajador','jornada_semana_reducida')
+    def _check_long_1(self):
+        self.__ev_long(LONG1,self.tipo_de_pension,self._fields['tipo_de_pension'])
+        self.__ev_long(LONG1,self.tipo_de_trabajador,self._fields['tipo_de_trabajador'])
+        self.__ev_long(LONG1,self.jornada_semana_reducida,self._fields['jornada_semana_reducida'])
+    
+    @api.constrains('salario_diario_integrado')
+    def _check_long_7(self):
+        self.__ev_long(LONG7,self.salario_diario_integrado_sua,self._fields['salario_diario_integrado_sua'])
+
     @api.one
     def _check_constrains_numero_de_credito_infonavit(self):
         """Constrains for main numero_de_credito_infonavit
@@ -158,22 +138,7 @@ class SUAAseg(models.Model):
         self.__ev_long(LONG10,self.numero_de_credito_infonavit,self._fields['numero_de_credito_infonavit'])
         self.__ev_long(LONG8,self.fecha_de_inicio_de_descuento,self._fields['fecha_de_inicio_de_descuento'])
         self.__ev_long(LONG1,self.tipo_de_descuento,self._fields['tipo_de_descuento'])
-        self.__ev_long(LONG8,self.valor_de_descuento_sua,self._fields['valor_de_descuento_sua'])
-
-
-
-
-
-    @api.constrains('tipo_de_pension','tipo_de_trabajador','jornada_semana_reducida')
-    def _check_long_1(self):
-        self.__ev_long(LONG1,self.tipo_de_pension,self._fields['tipo_de_pension'])
-        self.__ev_long(LONG1,self.tipo_de_trabajador,self._fields['tipo_de_trabajador'])
-        self.__ev_long(LONG1,self.jornada_semana_reducida,self._fields['jornada_semana_reducida'])
-    
-    @api.constrains('salario_diario_integrado')
-    def _check_long_7(self):
-        self.__ev_long(LONG7,self.salario_diario_integrado_sua,self._fields['salario_diario_integrado_sua'])
-            
+        self.__ev_long(LONG8,self.valor_de_descuento_sua,self._fields['valor_de_descuento_sua'])       
     
 
     
@@ -202,9 +167,7 @@ class SUAAseg(models.Model):
             return original_char.ljust(long,char_to_fill)
          
 
-    @api.one
-    def get_complete_row_aseg(self):
-        self.complete_row_aseg=self.get_full_row_ASEG()
+
 
 # === Override ORM Methods sua.aseg for template of ASEG.txt===
     @api.model
@@ -219,8 +182,6 @@ class SUAAseg(models.Model):
         res= super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
         self._check_constrains_numero_de_credito_infonavit()
      
-        # if 'salario_diario_integrado' in values.keys():
-        #     self._compute_salario_diario_integrado_sua()
     
     def remove_spaces_and_upper_case(self,dict):
         for key, value in dict.items():
@@ -249,7 +210,10 @@ class SUAAseg(models.Model):
                 return string.strip()
             else:
                 return string
-            
+
+    @api.one
+    def get_complete_row_aseg(self):
+        self.complete_row_aseg=self.get_full_row_ASEG()
 
 
 # === Computed Fields Methods ===
@@ -264,8 +228,34 @@ class SUAAseg(models.Model):
                 full_name_formatted = self.apellido_paterno+NAME_SEPARATOR+self.apellido_materno+NAME_SEPARATOR+self.nombre
                 self.nombre_apellidopaterno_materno_nombre = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,full_name_formatted)                
         except Exception as inst:
-            print(inst)
+            pass
 
+    @api.depends('salario_diario_integrado')
+    def _compute_salario_diario_integrado_sua(self):
+        if self.salario_diario_integrado:
+            string_value = self.salario_diario_integrado.replace('.', '')
+            removing_dot = string_value if  self.salario_diario_integrado else True
+            self.salario_diario_integrado_sua=self.fill_empty_or_incomplete(FILLZERO,LONG7,REPLACELEFT,removing_dot)
+
+    @api.one
+    @api.depends('valor_de_descuento','tipo_de_descuento')
+    def _compute_valor_de_descuento(self):
+        if self.tipo_de_descuento=='1':
+            if len(self.valor_de_descuento) == LONG4:
+                self.valor_de_descuento_sua=FILLZERO*2+self.valor_de_descuento+FILLZERO*2
+        elif self.tipo_de_descuento=='2':
+            if len(self.valor_de_descuento) == LONG7:
+                self.valor_de_descuento_sua = self.valor_de_descuento+FILLZERO
+        elif self.tipo_de_descuento=='3':
+            if len(self.valor_de_descuento) == LONG7:
+                self.valor_de_descuento_sua=FILLZERO+self.valor_de_descuento
+        else:
+            self.valor_de_descuento
+            self.valor_de_descuento_sua =self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
+            self.fecha_de_inicio_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)            
+            self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
+            self.tipo_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
+            self.valor_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
         
 
 

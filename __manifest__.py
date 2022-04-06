@@ -26,7 +26,8 @@
     'data': [
         # 'security/ir.model.access.csv',
         'views/res_company_form.xml',
-        'views/sua_aseg.xml'        
+        'views/sua_aseg.xml',
+        'views/sua_afil.xml'        
     ],
     # only loaded in demonstration mode
     'demo': [
