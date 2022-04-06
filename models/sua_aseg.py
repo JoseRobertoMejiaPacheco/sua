@@ -80,14 +80,11 @@ class SUAAseg(models.Model):
     valor_de_descuento = fields.Char(string='Valor De Descuento',default=lambda self :self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT),help="""
     1 Porcentaje (00EEDD00, dos enteros y dos decimales)
 2 Cuota Fija Monetaria (EEEEEDD0, cinco enteros y dos decim ales)
-3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)
-El Valor del Descuento debe grabarse SIN punto decimal, con el formato 4 enteros y 4 decim ales para los Tipo de
-Descuento Porcentaje y Cuota Fija en VSM del D.F. y con 5 enteros 3 decim ales para el Tipo de Descuento Cuota
-Fija Monetaria, se debe respetar el número máxim o de decimales de acuerdo a la siguiente tabla y rellenar con
-ceros a la derecha.""")
+3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)""")
     valor_de_descuento_sua = fields.Char(compute='_compute_valor_de_descuento',string='Valor De Descuento Formato SUA')
     
 
+    # Todo Fix: Separar Constrains, si uno falla, fallan todos
     @api.one
     @api.depends('tipo_de_descuento','valor_de_descuento')
     def _compute_valor_de_descuento(self):
@@ -95,6 +92,10 @@ ceros a la derecha.""")
             self.valor_de_descuento=''
         if self.tipo_de_descuento == ' ':
             self.valor_de_descuento_sua =self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
+            self.fecha_de_inicio_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)            
+            self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLZERO,LONG10,REPLACERIGHT)
+            self.tipo_de_descuento = self.fill_empty_or_incomplete(FILLSPACE,LONG1,REPLACERIGHT)
+            self.valor_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT) 
             self.valor_de_descuento  = 0
         elif self.tipo_de_descuento=='1' and len(self.valor_de_descuento) == LONG4:
             self.valor_de_descuento_sua=FILLZERO*2+self.valor_de_descuento+FILLZERO*2
@@ -156,15 +157,9 @@ ceros a la derecha.""")
         tipo_de_descuento, valor_de_descuento which
         only must be considerated when numero_de_credito_infonavit isn't empty."""
         """No asignar en constrains crea recursividad"""
-        #TODO: Fix when credit number doesnt exists
-        if self.numero_de_credito_infonavit != DEFAULT_NUMERO_CREDITO_INFONAVIT \
-            and self.fecha_de_inicio_de_descuento !=self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)\
-            and self.tipo_de_descuento !=self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)\
-            and self.valor_de_descuento !=self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT):
-            self.fecha_de_inicio_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)            
-            self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLZERO,LONG10,REPLACERIGHT)
-            self.tipo_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
-            self.self.valor_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT) 
+        if self.numero_de_credito_infonavit != DEFAULT_NUMERO_CREDITO_INFONAVIT:
+            raise ValidationError('Si incluye número de crédito infonavit los campos fecha_de_inicio_de_descuento,tipo_de_descuento y valor_de_descuento_sua\
+                son obligatorios, de lo contrario seleccione en tipo de crédito --> No aplica')  
 
         self.__ev_long(LONG10,self.numero_de_credito_infonavit,self._fields['numero_de_credito_infonavit'])
         self.__ev_long(LONG8,self.fecha_de_inicio_de_descuento,self._fields['fecha_de_inicio_de_descuento'])
@@ -173,14 +168,6 @@ ceros a la derecha.""")
 
 
 
-    @api.one
-    def get_full_row_ASEG(self):
-        if self:
-            return self.registro_patronal_imss+self.numero_de_seguridad_social+\
-                self.reg_fed_de_contribuyentes+self.curp+self.nombre_apellidopaterno_materno_nombre+\
-                    self.tipo_de_trabajador+self.jornada_semana_reducida+self.fecha_de_alta+\
-                        self.salario_diario_integrado_sua+self.clave_de_ubicacion+self.numero_de_credito_infonavit+\
-                            self.fecha_de_inicio_de_descuento+self.tipo_de_descuento+self.valor_de_descuento_sua+self.tipo_de_pension+self.clave_de_municipio
 
     @api.constrains('tipo_de_pension','tipo_de_trabajador','jornada_semana_reducida')
     def _check_long_1(self):
@@ -226,8 +213,6 @@ ceros a la derecha.""")
     def create(self, values):
         res = super(SUAAseg, self).create(self.remove_spaces_and_upper_case(values))
         res._check_constrains_numero_de_credito_infonavit()
-        print(self.get_full_row_ASEG())
-        print(len(self.get_full_row_ASEG()))
         return res
 
     @api.multi
@@ -235,8 +220,6 @@ ceros a la derecha.""")
         """"update values for new"""
         res= super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
         self._check_constrains_numero_de_credito_infonavit()
-        print(self.get_full_row_ASEG())
-        print(len(self.get_full_row_ASEG()))
         # if 'salario_diario_integrado' in values.keys():
         #     self._compute_salario_diario_integrado_sua()
     
