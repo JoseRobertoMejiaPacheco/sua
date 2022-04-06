@@ -167,8 +167,8 @@ ceros a la derecha.""")
             return self.registro_patronal_imss+self.numero_de_seguridad_social+\
                 self.reg_fed_de_contribuyentes+self.curp+self.nombre_apellidopaterno_materno_nombre+\
                     self.tipo_de_trabajador+self.jornada_semana_reducida+self.fecha_de_alta+\
-                        self.salario_diario_integrado+self.clave_de_ubicacion+self.numero_de_credito_infonavit+\
-                            self.fecha_de_inicio_de_descuento+self.valor_de_descuento+self.tipo_de_pension+self.clave_de_municipio
+                        self.salario_diario_integrado_sua+self.clave_de_ubicacion+self.numero_de_credito_infonavit+\
+                            self.fecha_de_inicio_de_descuento+self.tipo_de_descuento+self.valor_de_descuento_sua+self.tipo_de_pension+self.clave_de_municipio
 
     @api.constrains('tipo_de_pension','tipo_de_trabajador','jornada_semana_reducida')
     def _check_long_1(self):
