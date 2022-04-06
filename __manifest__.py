@@ -24,10 +24,15 @@
 
     # always loaded
     'data': [
+        #select * from ir_model_data where name like '%sua_es%'
         # 'security/ir.model.access.csv',
+        
         'views/res_company_form.xml',
         'views/sua_aseg.xml',
-        'views/sua_afil.xml'        
+        'views/sua_afil.xml',
+        'data/sua_estados.csv',
+        
+
     ],
     # only loaded in demonstration mode
     'demo': [
