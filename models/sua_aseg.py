@@ -1,3 +1,4 @@
+from email.policy import default
 import string
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError,RedirectWarning
@@ -8,6 +9,8 @@ LONG10 = 10
 LONG17 = 17
 LONG1 = 1
 LONG3 = 3
+LONG4 = 4
+LONG6 = 6
 LONG13 = 13
 LONG18 = 18
 LONG50 = 50
@@ -26,7 +29,7 @@ FIELDS_TO_UPPER_CASE=[
     'clave_de_ubicacion','clave_de_municipio']
 FIELDS_TO_STRIP=['registro_patronal_imss','reg_fed_de_contribuyentes','curp',
     'nombre','apellido_paterno','apellido_materno','clave_de_municipio']
-
+DEFAULT_NUMERO_CREDITO_INFONAVIT='0000000000'
 # === Model sua.aseg for template of ASEG.txt===
 class SUAAseg(models.Model):
     _name = 'sua.aseg'
@@ -67,13 +70,14 @@ class SUAAseg(models.Model):
         
     
     clave_de_ubicacion = fields.Char(string='Clave De Ubicacion',default=CLAVE_DE_UBICACION)
-    numero_de_credito_infonavit = fields.Char(string='Número De Crédito Infonavit')
-    fecha_de_inicio_de_descuento = fields.Char(string='Fecha de Inicio de Descuento')
+    numero_de_credito_infonavit = fields.Char(string='Número De Crédito Infonavit',default=DEFAULT_NUMERO_CREDITO_INFONAVIT)
+    fecha_de_inicio_de_descuento = fields.Char(string='Fecha de Inicio de Descuento',default=lambda self :self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT))
     tipo_de_descuento = fields.Selection(
         string='Tipo de Descuento',
-        selection=[('1', 'Porcentaje'),('2', 'Cuota Fija Monetaria'),('3', 'Factor de descuento'),(' ', 'No Aplica')]
+        selection=[('1', 'Porcentaje'),('2', 'Cuota Fija Monetaria'),('3', 'Factor de descuento'),(' ', 'No Aplica')],
+        default=' '
     )
-    valor_de_descuento = fields.Char(string='Valor De Descuento',help="""
+    valor_de_descuento = fields.Char(string='Valor De Descuento',default=lambda self :self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT),help="""
     1 Porcentaje (00EEDD00, dos enteros y dos decimales)
 2 Cuota Fija Monetaria (EEEEEDD0, cinco enteros y dos decim ales)
 3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)""")
@@ -85,23 +89,26 @@ class SUAAseg(models.Model):
     def _compute_valor_de_descuento(self):
         if not self.valor_de_descuento:
             self.valor_de_descuento=''
-        if self.tipo_de_descuento=='1':
+        if self.tipo_de_descuento == ' ':
+            self.valor_de_descuento_sua =self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
+            self.valor_de_descuento  = 0
+        elif self.tipo_de_descuento=='1' and len(self.valor_de_descuento) == LONG4:
             self.valor_de_descuento_sua=FILLZERO*2+self.valor_de_descuento+FILLZERO*2
-        elif self.tipo_de_descuento=='2':
+        elif self.tipo_de_descuento=='2' and len(self.valor_de_descuento) == LONG7:
             self.valor_de_descuento_sua = self.valor_de_descuento+FILLZERO
-        elif self.tipo_de_descuento=='3':
+        elif self.tipo_de_descuento=='3' and len(self.valor_de_descuento) == LONG7:
             self.valor_de_descuento_sua=FILLZERO+self.valor_de_descuento
         else:
-            self.valor_de_descuento_sua =self.fill_empty_or_incomplete(FILLZERO,LONG10,REPLACERIGHT)
+            raise ValidationError('Por favor asegurese de llenar correctamente los datos de valor de descuento. \n Consulte la ayuda del campo para más información.')
 
 
     
     tipo_de_pension = fields.Selection(
         string='Tipo de Pension',
-        selection=[('0', 'Tipo de Pensión'),('1', 'Pensión en Invalidez y Vida'),('2', 'Cesantía y Vejez')]
+        selection=[('0', 'Sin Pensión'),('1', 'Pensión en Invalidez y Vida'),('2', 'Cesantía y Vejez')]
     )
 
-    clave_de_municipio = fields.Char(string='Clave De Municipio',default= lambda self: self.env.user.company_id.registro_patronal[-3:])
+    clave_de_municipio = fields.Char(string='Clave De Municipio',default= lambda self: self.env.user.company_id.registro_patronal[3:])
 
 
 
@@ -144,17 +151,22 @@ class SUAAseg(models.Model):
         and derivated constains fecha_de_inicio_de_descuento,
         tipo_de_descuento, valor_de_descuento which
         only must be considerated when numero_de_credito_infonavit isn't empty."""
-        CREDITO_INFONAVIT = True if self.numero_de_credito_infonavit else  False
-        if CREDITO_INFONAVIT:
-            self.__ev_long(LONG10,self.numero_de_credito_infonavit,self._fields['numero_de_credito_infonavit'])
-            self.__ev_long(LONG8,self.fecha_de_inicio_de_descuento,self._fields['fecha_de_inicio_de_descuento'])
-            self.__ev_long(LONG1,self.tipo_de_descuento,self._fields['tipo_de_descuento'])
-            self.__ev_long(LONG8,self.valor_de_descuento_sua,self._fields['valor_de_descuento_sua'])
-        elif not CREDITO_INFONAVIT:
-            self.numero_de_credito_infonavit=self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
-            self.fecha_de_inicio_de_descuento=self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
-            self.tipo_de_descuento=self.fill_empty_or_incomplete(FILLSPACE,LONG1,REPLACERIGHT)
-            self.valor_de_descuento=self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
+        """No asignar en constrains crea recursividad"""
+        #TODO: Fix when credit number doesnt exists
+        if self.numero_de_credito_infonavit != DEFAULT_NUMERO_CREDITO_INFONAVIT \
+            and self.fecha_de_inicio_de_descuento !=self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)\
+            and self.tipo_de_descuento !=self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)\
+            and self.valor_de_descuento !=self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT):
+            self.fecha_de_inicio_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)            
+            self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLZERO,LONG10,REPLACERIGHT)
+            self.tipo_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
+            self.self.valor_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT) 
+
+        self.__ev_long(LONG10,self.numero_de_credito_infonavit,self._fields['numero_de_credito_infonavit'])
+        self.__ev_long(LONG8,self.fecha_de_inicio_de_descuento,self._fields['fecha_de_inicio_de_descuento'])
+        self.__ev_long(LONG1,self.tipo_de_descuento,self._fields['tipo_de_descuento'])
+        self.__ev_long(LONG8,self.valor_de_descuento_sua,self._fields['valor_de_descuento_sua'])
+
 
 
 
@@ -181,6 +193,9 @@ class SUAAseg(models.Model):
                 raise ValidationError("El Campo {field_name} debe contener {long} Carácteres \n pero contiene {caracteres} Carácteres".format(field_name=field_name,long=long,caracteres=len(field_value)))
         else:
             raise ValidationError("El Campo {field_name} debe contener {long} Carácteres pero está vacío".format(field_name=field_name,long=long))   
+
+            
+    
 
 # === Complete with spaces or 0, nothing must be null or incomplete  sua.aseg for template of ASEG.txt===
     def fill_empty_or_incomplete(self,char_to_fill,long,position,original_char=""):

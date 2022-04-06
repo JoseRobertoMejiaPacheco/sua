@@ -36,6 +36,7 @@
                         <field name="fecha_de_inicio_de_descuento" />
                         <field name="tipo_de_descuento" />
                         <field name="valor_de_descuento" />
+                        <field name="valor_de_descuento_sua" />
                         <field name="tipo_de_pension" />
                         <field name="clave_de_municipio" style="text-transform:uppercase"/>
                         </group>
