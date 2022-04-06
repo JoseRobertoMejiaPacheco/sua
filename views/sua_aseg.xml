@@ -17,6 +17,8 @@
             <field name="arch" type="xml">
                 <form>
                     <sheet>
+                        <button string="_get_complete_row_aseg" name="get_complete_row_aseg" type="object" class="oe_highlight"/>
+                        <field name="complete_row_aseg" />
                         <group>
                         <field name="registro_patronal_imss" style="text-transform:uppercase"/>
                         <field name="numero_de_seguridad_social" />

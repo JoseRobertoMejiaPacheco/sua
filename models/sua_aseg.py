@@ -75,14 +75,14 @@ class SUAAseg(models.Model):
     tipo_de_descuento = fields.Selection(
         string='Tipo de Descuento',
         selection=[('1', 'Porcentaje'),('2', 'Cuota Fija Monetaria'),('3', 'Factor de descuento'),('0', 'No Aplica')],
-        default=' '
+        default='0'
     )
     valor_de_descuento = fields.Char(string='Valor De Descuento',default=lambda self :self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT),help="""
     1 Porcentaje (00EEDD00, dos enteros y dos decimales)
 2 Cuota Fija Monetaria (EEEEEDD0, cinco enteros y dos decim ales)
 3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)""")
     valor_de_descuento_sua = fields.Char(compute='_compute_valor_de_descuento',string='Valor De Descuento Formato SUA')
-    
+    complete_row_aseg = fields.Char(string='Registro Completo para Formato SUA Aseg.txt')
 
     # Todo Fix: Separar Constrains, si uno falla, fallan todos
     @api.one
@@ -202,6 +202,9 @@ class SUAAseg(models.Model):
             return original_char.ljust(long,char_to_fill)
          
 
+    @api.one
+    def get_complete_row_aseg(self):
+        self.complete_row_aseg=self.get_full_row_ASEG()
 
 # === Override ORM Methods sua.aseg for template of ASEG.txt===
     @api.model
@@ -218,7 +221,7 @@ class SUAAseg(models.Model):
         res= super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
         self._check_constrains_numero_de_credito_infonavit()
         print(self.get_full_row_ASEG())
-        print(len(self.get_full_row_ASEG()))
+        print(len(self.get_full_row_ASEG()))        
         # if 'salario_diario_integrado' in values.keys():
         #     self._compute_salario_diario_integrado_sua()
     
@@ -231,9 +234,9 @@ class SUAAseg(models.Model):
         return dict
 
 
-    @api.one
+    @api.multi
     def get_full_row_ASEG(self):
-        if self:
+        if self.ensure_one():
             return self.registro_patronal_imss+self.numero_de_seguridad_social+\
                 self.reg_fed_de_contribuyentes+self.curp+self.nombre_apellidopaterno_materno_nombre+\
                     self.tipo_de_trabajador+self.jornada_semana_reducida+self.fecha_de_alta+\
