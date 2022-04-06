@@ -211,8 +211,6 @@ class SUAAseg(models.Model):
     def create(self, values):
         res = super(SUAAseg, self).create(self.remove_spaces_and_upper_case(values))
         res._check_constrains_numero_de_credito_infonavit()
-        print(self.get_full_row_ASEG())
-        print(len(self.get_full_row_ASEG()))
         return res
 
     @api.multi
@@ -220,8 +218,7 @@ class SUAAseg(models.Model):
         """"update values for new"""
         res= super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
         self._check_constrains_numero_de_credito_infonavit()
-        print(self.get_full_row_ASEG())
-        print(len(self.get_full_row_ASEG()))        
+     
         # if 'salario_diario_integrado' in values.keys():
         #     self._compute_salario_diario_integrado_sua()
     
