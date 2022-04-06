@@ -41,6 +41,6 @@
             </field>
         </record>
 
-        <menuitem id="sua_afil_list" name="AFIL.TXT" action="sua_afil_action"  parent="sua_aseg_root_menu" sequence="6" />
+        <menuitem id="sua_afil_list" name="AFIL.txt" action="sua_afil_action"  parent="sua_aseg_root_menu" sequence="6" />
     </data>
 </odoo>
