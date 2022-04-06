@@ -80,7 +80,11 @@ class SUAAseg(models.Model):
     valor_de_descuento = fields.Char(string='Valor De Descuento',default=lambda self :self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT),help="""
     1 Porcentaje (00EEDD00, dos enteros y dos decimales)
 2 Cuota Fija Monetaria (EEEEEDD0, cinco enteros y dos decim ales)
-3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)""")
+3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)
+El Valor del Descuento debe grabarse SIN punto decimal, con el formato 4 enteros y 4 decim ales para los Tipo de
+Descuento Porcentaje y Cuota Fija en VSM del D.F. y con 5 enteros 3 decim ales para el Tipo de Descuento Cuota
+Fija Monetaria, se debe respetar el número máxim o de decimales de acuerdo a la siguiente tabla y rellenar con
+ceros a la derecha.""")
     valor_de_descuento_sua = fields.Char(compute='_compute_valor_de_descuento',string='Valor De Descuento Formato SUA')
     
 
@@ -169,6 +173,14 @@ class SUAAseg(models.Model):
 
 
 
+    @api.one
+    def get_full_row_ASEG(self):
+        if self:
+            return self.registro_patronal_imss+self.numero_de_seguridad_social+\
+                self.reg_fed_de_contribuyentes+self.curp+self.nombre_apellidopaterno_materno_nombre+\
+                    self.tipo_de_trabajador+self.jornada_semana_reducida+self.fecha_de_alta+\
+                        self.salario_diario_integrado_sua+self.clave_de_ubicacion+self.numero_de_credito_infonavit+\
+                            self.fecha_de_inicio_de_descuento+self.tipo_de_descuento+self.valor_de_descuento_sua+self.tipo_de_pension+self.clave_de_municipio
 
     @api.constrains('tipo_de_pension','tipo_de_trabajador','jornada_semana_reducida')
     def _check_long_1(self):
@@ -214,6 +226,8 @@ class SUAAseg(models.Model):
     def create(self, values):
         res = super(SUAAseg, self).create(self.remove_spaces_and_upper_case(values))
         res._check_constrains_numero_de_credito_infonavit()
+        print(self.get_full_row_ASEG())
+        print(len(self.get_full_row_ASEG()))
         return res
 
     @api.multi
@@ -221,6 +235,8 @@ class SUAAseg(models.Model):
         """"update values for new"""
         res= super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
         self._check_constrains_numero_de_credito_infonavit()
+        print(self.get_full_row_ASEG())
+        print(len(self.get_full_row_ASEG()))
         # if 'salario_diario_integrado' in values.keys():
         #     self._compute_salario_diario_integrado_sua()
     
