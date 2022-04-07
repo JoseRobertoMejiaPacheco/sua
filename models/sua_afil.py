@@ -28,9 +28,9 @@ FIELDS_TO_UPPER_CASE=[
     'registro_patronal_imss','reg_fed_de_contribuyentes','curp',
     'nombre','apellido_paterno','apellido_materno',
     'nombre_apellidopaterno_materno_nombre',
-    'clave_de_ubicacion','clave_de_municipio']
+    'clave_de_ubicacion','clave_de_municipio','clave_lugar_de_nacimiento','sexo']
 FIELDS_TO_STRIP=['registro_patronal_imss','reg_fed_de_contribuyentes','curp',
-    'nombre','apellido_paterno','apellido_materno','clave_de_municipio','ocupacion']
+    'nombre','apellido_paterno','apellido_materno','clave_de_municipio','ocupacion','clave_lugar_de_nacimiento','sexo']
 DEFAULT_NUMERO_CREDITO_INFONAVIT='          '
 
 
@@ -114,16 +114,15 @@ class SUAAfil(models.Model):
     @api.one
     @api.constrains('sexo')
     def _check_sexo(self):
-        pass
-        # if not self.sexo:
-        #     raise ValidationError("El Campo Sexo es requerido.")
+        if not self.sexo:
+            raise ValidationError("El Campo Sexo es requerido.")
 
 
     @api.one
     @api.constrains('lugar_de_nacimiento')
     def _check_lugar_de_nacimiento(self):
         if not self.lugar_de_nacimiento:
-            self.__ev_long(LONG1,self.sexo,self._fields['lugar_de_nacimiento'])
+            self.__ev_long(LONG1,self.lugar_de_nacimiento,self._fields['lugar_de_nacimiento'])
 
     @api.one
     @api.constrains('tipo_de_salario')
