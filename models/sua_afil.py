@@ -1,4 +1,5 @@
 from email.policy import default
+from os import unlink
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError,RedirectWarning
 from datetime import datetime
@@ -15,6 +16,7 @@ LONG6 = 6
 LONG13 = 13
 LONG18 = 18
 LONG50 = 50
+LONG25 = 25
 LONG7 = 7
 LONG8 = 8
 LONG11 = 11
@@ -39,9 +41,9 @@ class SUAAfil(models.Model):
     _name = 'sua.afil'
     _description = 'Formato del Archivo de Importación de Trabajadores AFIL.txt'
     registro_patronal_imss = fields.Char(string='Registro Patronal',default= lambda self: self.env.user.company_id.registro_patronal or FILLSPACE,size=LONG11)
-    digito_verificador_registro_patronal = fields.Char(string='Dígito Verificador Registro Patronal',size=LONG1)
-    numero_de_seguridad_social = fields.Char(string='Número de Seguridad Social',size=LONG11,default=FILLSPACE)
-    digito_verificador_numero_de_seguridad_social = fields.Char(string='Dígito Verificador Número de Seguridad Social')
+    digito_verificador_registro_patronal = fields.Char(compute='_compute_digito_verificador_de_registro_patronal',string='Dígito Verificador Registro Patronal',size=LONG1)
+    numero_de_seguridad_social = fields.Char(string='Número de Seguridad Social',size=LONG11)
+    digito_verificador_numero_de_seguridad_social = fields.Char(compute='_compute_digito_verificador_de_seguridad_social',string='Dígito Verificador Número de Seguridad Social')
     codigo_postal = fields.Char(string='Código Postal',size=LONG5)
     fecha_de_nacimiento = fields.Char(string='Fecha de Nacimiento',size=LONG8)
     lugar_de_nacimiento = fields.Many2one('sua.estados', string='Lugar de Nacimiento')
@@ -59,10 +61,16 @@ class SUAAfil(models.Model):
     def _onchange_lugar_de_nacimiento(self):
         self.clave_lugar_de_nacimiento = self.lugar_de_nacimiento.cve_curp
 
-    @api.onchange('numero_de_seguridad_social')
-    def _onchange_numero_de_seguridad_social(self):
+    @api.depends('numero_de_seguridad_social')
+    def _compute_digito_verificador_de_seguridad_social(self):
         if len(self.numero_de_seguridad_social)==LONG11:
             self.digito_verificador_numero_de_seguridad_social=self.numero_de_seguridad_social[-1]
+    
+    @api.depends('numero_de_seguridad_social')
+    def _compute_digito_verificador_de_registro_patronal(self):
+        if len(self.numero_de_seguridad_social)==LONG11:
+            self.digito_verificador_registro_patronal=self.registro_patronal_imss[-1]    
+              
 
     @api.onchange('registro_patronal_imss')
     def _onchange_registro_patronal_imss(self):
@@ -143,7 +151,7 @@ class SUAAfil(models.Model):
 
     @api.depends('lugar_de_nacimiento')
     def _compute_lugar_de_nacimiento_formato_sua(self):
-        self.lugar_de_nacimiento_formato_sua = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,self.lugar_de_nacimiento.descripcion)
+        self.lugar_de_nacimiento_formato_sua = self.fill_empty_or_incomplete(FILLSPACE,LONG25,REPLACERIGHT,self.lugar_de_nacimiento.descripcion)
 
     ocupacion_formato_sua = fields.Char(compute='_compute_ocupacion_formato_sua', string='')
     
@@ -200,12 +208,18 @@ class SUAAfil(models.Model):
 
     @api.multi
     def get_full_row_AFIL(self):
-        return self.registro_patronal_imss,self.digito_verificador_numero_de_seguridad_social,self.numero_de_seguridad_social,self.digito_verificador_numero_de_seguridad_social+\
-            self.codigo_postal,self.fecha_de_nacimiento,self.lugar_de_nacimiento_formato_sua,self.clave_lugar_de_nacimiento,self.unidad_de_medicina_familiar,self.ocupacion_formato_sua,self.sexo+\
-                self.tipo_de_salario,self.hora
+        print(self.registro_patronal_imss[:-1])
+        return self.registro_patronal_imss[:-1]+self.digito_verificador_registro_patronal+self.numero_de_seguridad_social[:-1]+self.digito_verificador_numero_de_seguridad_social+\
+            self.codigo_postal+self.fecha_de_nacimiento+self.lugar_de_nacimiento_formato_sua+self.clave_lugar_de_nacimiento+self.unidad_de_medicina_familiar+self.ocupacion_formato_sua+self.sexo+\
+                self.tipo_de_salario+self.hora
 
 
     @api.one
     def get_complete_row_afil(self):
 
         self.complete_row_afil=self.get_full_row_AFIL()
+
+    @api.one
+    def unlink(self):
+        print(self.get_complete_row_afil())
+        print(len(self.get_complete_row_afil()))
