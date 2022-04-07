@@ -22,6 +22,7 @@ LONG8 = 8
 LONG11 = 11
 LONG12 = 12
 FILLZERO = "0"
+FILLEMPTY = ""
 FILLSPACE = " "
 REPLACELEFT = 'left'
 REPLACERIGHT = 'right'
@@ -32,7 +33,7 @@ FIELDS_TO_UPPER_CASE=[
     'nombre_apellidopaterno_materno_nombre',
     'clave_de_ubicacion','clave_de_municipio','clave_lugar_de_nacimiento','sexo']
 FIELDS_TO_STRIP=['registro_patronal_imss','reg_fed_de_contribuyentes','curp',
-    'nombre','apellido_paterno','apellido_materno','clave_de_municipio','ocupacion','clave_lugar_de_nacimiento','sexo']
+    'nombre','apellido_paterno','apellido_materno','clave_de_municipio','ocupacion','clave_lugar_de_nacimiento','sexo','salario_diario_integrado_sua']
 DEFAULT_NUMERO_CREDITO_INFONAVIT='          '
 
 
@@ -51,12 +52,12 @@ class SUAMov(models.Model):
     salario_diario_integrado = fields.Char(string='Salario Diario Integrado',size=LONG7,help="""El Salario Diario Integrado (5 enteros y 2 decimales) debe grabarse SIN punto decimal y rellenando con ceros a la
 izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
     salario_diario_integrado_sua = fields.Char(compute='_compute_salario_diario_integrado_sua',string='Salario Diario Integrado Formato SUA o Aportacion Voluntaria')
-    
+    complete_row_afil = fields.Char(string='Registro Completo para Formato SUA Movs.txt')
     
     
     @api.depends('dias_de_la_incidencia')
     def _compute_dias_de_la_incidencia_formato_sua(self):
-        self.dias_de_la_incidencia_formato_sua = self.fill_empty_or_incomplete(FILLZERO,LONG2,REPLACERIGHT,self.dias_de_la_incidencia or FILLSPACE)
+        self.dias_de_la_incidencia_formato_sua = self.fill_empty_or_incomplete(FILLZERO,LONG2,REPLACELEFT,self.dias_de_la_incidencia or FILLEMPTY)
      
 
     @api.constrains('salario_diario_integrado_sua')
@@ -92,7 +93,7 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
             removing_dot = string_value if  self.salario_diario_integrado else True
             self.salario_diario_integrado_sua=self.fill_empty_or_incomplete(FILLZERO,LONG7,REPLACELEFT,removing_dot)
         else:
-            self.salario_diario_integrado_sua=self.fill_empty_or_incomplete(FILLZERO,LONG7,REPLACELEFT,FILLSPACE)
+            self.salario_diario_integrado_sua=self.fill_empty_or_incomplete(FILLZERO,LONG7,REPLACELEFT,FILLEMPTY)
 
 # === Complete with spaces or 0, nothing must be null or incomplete  sua.aseg for template of ASEG.txt===
     def fill_empty_or_incomplete(self,char_to_fill,long,position,original_char=""):
@@ -100,6 +101,8 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
         if len(original_char)==long:
             return original_char
         elif position=="left":
+            a = original_char.rjust(long,char_to_fill)
+            print(a)
             return original_char.rjust(long,char_to_fill)
         elif position=="right":
             return original_char.ljust(long,char_to_fill)  
@@ -131,3 +134,18 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
                 return string.strip()
             else:
                 return string
+
+    @api.multi
+    def get_full_row_MOV(self):
+        return self.registro_patronal_imss+self.numero_de_seguridad_social+self.tipo_de_movimiento+self.fecha_de_movimiento+\
+            self.fill_empty_or_incomplete(FILLSPACE,LONG8,REPLACELEFT,self.folio_de_incapacidad or FILLEMPTY)+self.dias_de_la_incidencia_formato_sua+self.salario_diario_integrado_sua
+
+
+    @api.one
+    def get_complete_row_afil(self):
+        self.complete_row_afil=self.get_full_row_MOV()
+
+    @api.one
+    def unlink(self):
+        print(self.get_complete_row_afil())
+        print(len(self.get_complete_row_afil()))
