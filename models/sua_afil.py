@@ -59,7 +59,7 @@ class SUAAfil(models.Model):
 
     @api.onchange('lugar_de_nacimiento')
     def _onchange_lugar_de_nacimiento(self):
-        self.clave_lugar_de_nacimiento = self.lugar_de_nacimiento.cve_curp
+        self.clave_lugar_de_nacimiento = self.fill_empty_or_incomplete(FILLZERO,LONG2,REPLACELEFT,str(self.lugar_de_nacimiento.id)) 
 
     @api.depends('numero_de_seguridad_social')
     def _compute_digito_verificador_de_seguridad_social(self):
@@ -210,7 +210,7 @@ class SUAAfil(models.Model):
     def get_full_row_AFIL(self):
         print(self.registro_patronal_imss[:-1])
         return self.registro_patronal_imss[:-1]+self.digito_verificador_registro_patronal+self.numero_de_seguridad_social[:-1]+self.digito_verificador_numero_de_seguridad_social+\
-            self.codigo_postal+self.fecha_de_nacimiento+self.lugar_de_nacimiento_formato_sua+self.clave_lugar_de_nacimiento+self.unidad_de_medicina_familiar+self.ocupacion_formato_sua+self.sexo+\
+            self.codigo_postal+self.fecha_de_nacimiento+self.lugar_de_nacimiento_formato_sua+self.fill_empty_or_incomplete(FILLZERO,LONG2,REPLACELEFT,str(self.lugar_de_nacimiento.id))+self.unidad_de_medicina_familiar+self.ocupacion_formato_sua+self.sexo+\
                 self.tipo_de_salario+self.hora
 
 
