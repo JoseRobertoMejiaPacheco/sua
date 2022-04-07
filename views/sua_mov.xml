@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data>
+        <record id="sua_mov_view_tree" model="ir.ui.view">
+            <field name="name">Lista Movimientos SUA</field>
+            <field name="model">sua.mov</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="registro_patronal_imss" />
+                </tree>
+            </field>
+        </record>
+
+        <record id="sua_mov_action" model="ir.actions.act_window">
+            <field name="name">Formulario de Movimientos SUA</field>
+            <field name="res_model">sua.mov</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[]</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <!-- TEXT HERE -->                
+                <p>
+                    Hola
+                    <!-- DETAILS -->
+                </p>
+            </field>
+        </record>
+
+        
+        <menuitem id="sua_mov_list" name="MOVS.txt" action="sua_mov_action"  parent="sua_aseg_root_menu" sequence="5" />
+    </data>
+</odoo>

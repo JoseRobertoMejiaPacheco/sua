@@ -86,6 +86,7 @@ class SUAAfil(models.Model):
     @api.constrains('digito_verificador_registro_patronal')
     def _check_digito_verificador_registro_patronal(self):
         self.__ev_long(LONG1,self.digito_verificador_registro_patronal,self._fields['digito_verificador_registro_patronal'])
+        
     @api.one
     @api.constrains('numero_de_seguridad_social')
     def _check_numero_de_seguridad_social(self):
@@ -179,6 +180,7 @@ class SUAAfil(models.Model):
                 raise ValidationError("El Campo {field_name} debe contener {long} Carácteres \n pero contiene {caracteres} Carácteres".format(field_name=field_name,long=long,caracteres=len(field_value)))
         else:
             raise ValidationError("El Campo {field_name} debe contener {long} Carácteres pero está vacío".format(field_name=field_name,long=long))  
+
     @api.model
     def create(self, values):
         values.update({'hora':int(datetime.now().strftime('%I'))})
