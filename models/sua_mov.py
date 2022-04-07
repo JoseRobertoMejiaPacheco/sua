@@ -135,6 +135,17 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
             else:
                 return string
 
+    @api.model
+    def create(self, values):
+        res =  super(SUAMov, self).create(self.remove_spaces_and_upper_case(values))
+        res._check_tipo_de_movimiento()
+
+    @api.multi
+    def write(self, values):
+        res = super(SUAMov, self).write(self.remove_spaces_and_upper_case(values))
+        self._check_tipo_de_movimiento()
+        return res
+
     @api.multi
     def get_full_row_MOV(self):
         return self.registro_patronal_imss+self.numero_de_seguridad_social+self.tipo_de_movimiento+self.fecha_de_movimiento+\
@@ -149,3 +160,21 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
     def unlink(self):
         print(self.get_complete_row_afil())
         print(len(self.get_complete_row_afil()))
+
+    
+    @api.one
+    def _check_tipo_de_movimiento(self):
+        if self.tipo_de_movimiento in ['12']:
+            if self.folio_de_incapacidad==(FILLSPACE*8):
+                raise ValidationError("El Campo folio_de_incapacidad es requerido para el tipo de movimiento"+self.tipo_de_movimiento)  
+
+        if self.tipo_de_movimiento in ['12','11']:
+            if self.dias_de_la_incidencia_formato_sua==(FILLZERO*2):
+                raise ValidationError("El Campo dias_de_la_incidencia_formato_sua es requerido para el tipo de movimiento"+self.tipo_de_movimiento)
+
+        if self.tipo_de_movimiento in ['07','08']:
+            if self.salario_diario_integrado_sua==(FILLZERO*7):
+                raise ValidationError("El Campo salario_diario_integrado_sua es requerido para el tipo de movimiento"+self.tipo_de_movimiento)
+
+            
+    
