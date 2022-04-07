@@ -52,6 +52,8 @@ class SUAAfil(models.Model):
     tipo_de_salario = fields.Selection(string='Tipo de Salario', selection=[('0', 'Fijo'), ('1', 'Variable'),('2', 'Mixto')])
     hora = fields.Char(string='Hora',size=LONG1)
 
+    complete_row_afil = fields.Char(string='Registro Completo para Formato SUA Afil.txt')
+
 
     @api.onchange('lugar_de_nacimiento')
     def _onchange_lugar_de_nacimiento(self):
@@ -135,9 +137,31 @@ class SUAAfil(models.Model):
         self.__ev_long(LONG1,self.hora,self._fields['hora'])
 
 
+    lugar_de_nacimiento_formato_sua = fields.Char(compute='_compute_lugar_de_nacimiento_formato_sua', string='Lugar de Nacimiento Formato SUA')
+
+  
+
+    @api.depends('lugar_de_nacimiento')
+    def _compute_lugar_de_nacimiento_formato_sua(self):
+        self.lugar_de_nacimiento_formato_sua = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,self.lugar_de_nacimiento.descripcion)
+
+    ocupacion_formato_sua = fields.Char(compute='_compute_ocupacion_formato_sua', string='')
+    
+    @api.depends('ocupacion')
+    def _compute_ocupacion_formato_sua(self):
+        self.ocupacion_formato_sua = self.fill_empty_or_incomplete(FILLSPACE,LONG12,REPLACERIGHT,self.ocupacion)
+    
 
 
-        
+# === Complete with spaces or 0, nothing must be null or incomplete  sua.aseg for template of ASEG.txt===
+    def fill_empty_or_incomplete(self,char_to_fill,long,position,original_char=""):
+        """Fills a string with a specific character, and long at left or right position"""
+        if len(original_char)==long:
+            return original_char
+        elif position=="left":
+            return original_char.rjust(long,char_to_fill)
+        elif position=="right":
+            return original_char.ljust(long,char_to_fill)        
         
 # === Define Errors sua.aseg for template of ASEG.txt===
     @api.one
@@ -173,3 +197,15 @@ class SUAAfil(models.Model):
                 return string.strip()
             else:
                 return string
+
+    @api.multi
+    def get_full_row_AFIL(self):
+        return self.registro_patronal_imss,self.digito_verificador_numero_de_seguridad_social,self.numero_de_seguridad_social,self.digito_verificador_numero_de_seguridad_social+\
+            self.codigo_postal,self.fecha_de_nacimiento,self.lugar_de_nacimiento_formato_sua,self.clave_lugar_de_nacimiento,self.unidad_de_medicina_familiar,self.ocupacion_formato_sua,self.sexo+\
+                self.tipo_de_salario,self.hora
+
+
+    @api.one
+    def get_complete_row_afil(self):
+
+        self.complete_row_afil=self.get_full_row_AFIL()
