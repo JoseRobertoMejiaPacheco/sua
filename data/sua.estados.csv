@@ -1,0 +1,34 @@
+id,cod_pos,descripcion,cve_curp
+sua_model_sua_estados_1,20,AGUASCALIENTES,AS
+sua_model_sua_estados_2,21 22,BAJA CALIFORNIA NORTE,BC
+sua_model_sua_estados_3,23,BAJA CALIFORNIA SUR,BS
+sua_model_sua_estados_4,24,CAMPECHE,CC
+sua_model_sua_estados_5,25 26 27,COAHUILA,CL
+sua_model_sua_estados_6,28,COLIMA,CM
+sua_model_sua_estados_7,29 30,CHIAPAS,CS
+sua_model_sua_estados_8,31 32 33,CHIHUAHUA,CH
+sua_model_sua_estados_9,01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16,DISTRITO FEDERAL,DF
+sua_model_sua_estados_10,34 35,DURANGO,DG
+sua_model_sua_estados_11,36 37 38,GUANAJUATO,GT
+sua_model_sua_estados_12,39 40 41,GUERRERO,GR
+sua_model_sua_estados_13,42 43,HIDALGO,HG
+sua_model_sua_estados_14,44 45 46 47 48 49,JALISCO,JC
+sua_model_sua_estados_15,50 51 52 53 54 55 56 57,ESTADO DE MEXICO,MC
+sua_model_sua_estados_16,58 59 60 61,MICHOACAN,MN
+sua_model_sua_estados_17,62,MORELOS,MS
+sua_model_sua_estados_18,63,NAYARIT,NT
+sua_model_sua_estados_19,64 65 66 67,NUEVO LEON,NL
+sua_model_sua_estados_20,68 69 70 71,OAXACA,OC
+sua_model_sua_estados_21,72 73 74 75,PUEBLA,PL
+sua_model_sua_estados_22,76,QUERETARO,QT
+sua_model_sua_estados_23,77,QUINTANA ROO,QR
+sua_model_sua_estados_24,78 79,SAN LUIS POTOSI,SP
+sua_model_sua_estados_25,80 81 82,SINALOA,SL
+sua_model_sua_estados_26,83 84 85,SONORA,SR
+sua_model_sua_estados_27,86,TABASCO,TC
+sua_model_sua_estados_28,87 88 89,TAMAULIPAS,TS
+sua_model_sua_estados_29,90,TLAXCALA,TL
+sua_model_sua_estados_30,91 92 93 94 95 96,VERACRUZ,VZ
+sua_model_sua_estados_31,97,YUCATAN,YN
+sua_model_sua_estados_32,98 99,ZACATECAS,ZS
+sua_model_sua_estados_35,00,EXTRANJEROS,NE

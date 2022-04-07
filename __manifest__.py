@@ -30,7 +30,7 @@
         'views/res_company_form.xml',
         'views/sua_aseg.xml',
         'views/sua_afil.xml',
-        'data/sua_estados.csv',
+        'data/sua.estados.csv',
         
 
     ],
