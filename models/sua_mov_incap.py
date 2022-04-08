@@ -44,17 +44,24 @@ class SUAMovIncap(models.Model):
     registro_patronal_imss = fields.Char(string='Registro Patronal',default= lambda self: self.env.user.company_id.registro_patronal or FILLSPACE,size=LONG11)
     numero_de_seguridad_social = fields.Char(string='Número de Seguridad Social',size=LONG11)
     tipo_de_incidencia = fields.Char(string='Tipo de Incidencia',default='1')
-    fecha_de_inicio = fields.Char(string='Fecha de Alta')
+    fecha_de_inicio = fields.Char(string='Fecha de Inicio')
     folio = fields.Char(string='Folio de Incapacidad',size=LONG8)
-    dias_subsidiados = fields.Char(string='Días Subsidiados',size=LONG3)    
+    dias_subsidiados = fields.Char(string='Días Subsidiados',size=LONG3)
+    porcentaje_de_incapacidad = fields.Char(string='Porcentaje de Incapacidad',size=LONG3)    
     rama_de_incapacidad = fields.Selection(string='Rama de Incapacidad', selection=[('1', 'Riesgo de Trabajo'), ('2', 'Enfermedad General'),('3', 'Maternidad'),('4', 'Licencia 140 Bis')])    
     tipo_de_riesgo = fields.Selection(string='Tipo de Riesgo', selection=[('1', 'Accidente de Trabajo'), ('2', 'Accidente de Trayecto'), ('3', 'Enfermedad Profesional')])    
     secuela_o_consecuencia = fields.Selection(string='Secuela o Consecuencia', selection=[('0', 'Ninguna'), ('1', 'Incapacidad Temporal'),('2', 'Valuación Provisional'),
     ('3', 'Valuación Definitiva'),('4', 'Defunción'),('5', 'Recaída'),('6', 'Valuación Posterior a la Fecha de Alta'),('7', 'Reevaluación Profesional'),
     ('8', 'Recaída sin Alta Médica'),('9', 'Reevaluación Definitiva')])
-    control_de_incapacidad = fields.Char(string='Control de Incapacidad')
+    control_de_incapacidad = fields.Selection(string='Control de Incapacidad', selection=[('1', 'Única'), ('2', 'Inicial'),('3', 'Subsecuente'),('4', 'Alta Médica o ST-2'),('6', 'Prenatal'),('7', 'Enlace'),('8', 'Posnatal'),('0', 'Ninguna')])
     fecha_de_termino = fields.Char(string='Fecha de Término')
-
+    complete_row_afil = fields.Char(string='Registro Completo para Formato SUA Incap.txt')
+    
+    @api.constrains('porcentaje_de_incapacidad')
+    def _check_porcentaje_de_incapacidad(self):
+        self.__ev_long(LONG3,self.porcentaje_de_incapacidad,self._fields['porcentaje_de_incapacidad'])
+            
+    
 
     @api.constrains('fecha_de_termino')
     def _check_long_fecha_de_inicio(self):
@@ -83,7 +90,7 @@ class SUAMovIncap(models.Model):
     @api.one
     @api.constrains('dias_subsidiados')
     def _check_dias_subsidiados(self):
-        self.__ev_long(LONG8,self.dias_subsidiados,self._fields['dias_subsidiados'])
+        self.__ev_long(LONG3,self.dias_subsidiados,self._fields['dias_subsidiados'])
 
     @api.one
     @api.constrains('folio')
@@ -96,7 +103,7 @@ class SUAMovIncap(models.Model):
 
     @api.constrains('tipo_de_incidencia')
     def _check_long_tipo_de_incidencia(self):
-        self.__ev_long(LONG8,self.tipo_de_incidencia,self._fields['tipo_de_incidencia'])
+        self.__ev_long(LONG1,self.tipo_de_incidencia,self._fields['tipo_de_incidencia'])
 
 # === Define Errors sua.aseg for template of ASEG.txt===
     @api.one
@@ -127,16 +134,22 @@ class SUAMovIncap(models.Model):
     @api.model
     def create(self, values):
         res = super(SUAMovIncap, self).create(self.remove_spaces_and_upper_case(values))
-        res._check_constrains_numero_de_credito_infonavit()
+        # res._check_constrains_numero_de_credito_infonavit()
         return res
 
     @api.multi
     def write(self, values):
         """"update values for new"""
         res= super(SUAMovIncap, self).write(self.remove_spaces_and_upper_case(values))
-        self._check_constrains_numero_de_credito_infonavit()
+        # self._check_constrains_numero_de_credito_infonavit()
      
-    
+    @api.one
+    def unlink(self):
+        self.get_complete_row_aseg()
+        print(self.get_full_row_INCAP())
+        print(len(self.get_full_row_INCAP()))
+
+
     def remove_spaces_and_upper_case(self,dict):
         for key, value in dict.items():
             if key in dict.keys():
@@ -147,13 +160,11 @@ class SUAMovIncap(models.Model):
 
 
     @api.multi
-    def get_full_row_ASEG(self):
+    def get_full_row_INCAP(self):
         if self.ensure_one():
-            return self.registro_patronal_imss+self.numero_de_seguridad_social+\
-                self.reg_fed_de_contribuyentes+self.curp+self.nombre_apellidopaterno_materno_nombre+\
-                    self.tipo_de_trabajador+self.jornada_semana_reducida+self.fecha_de_inicio+\
-                        self.salario_diario_integrado_sua+self.clave_de_ubicacion+self.numero_de_credito_infonavit+\
-                            self.fecha_de_inicio_de_descuento+self.tipo_de_descuento+self.valor_de_descuento_sua+self.tipo_de_pension+self.clave_de_municipio
+            return self.registro_patronal_imss+self.numero_de_seguridad_social+self.tipo_de_incidencia+\
+                self.fecha_de_inicio+self.folio+self.dias_subsidiados+self.porcentaje_de_incapacidad+self.rama_de_incapacidad+\
+                    self.tipo_de_riesgo+self.secuela_o_consecuencia+self.control_de_incapacidad+self.fecha_de_termino
 
     def remove_spaces_alum(self,string,key=False):
         if string.isalnum():
@@ -166,4 +177,4 @@ class SUAMovIncap(models.Model):
 
     @api.one
     def get_complete_row_aseg(self):
-        self.complete_row_aseg=self.get_full_row_ASEG()
+        self.complete_row_aseg=self.get_full_row_INCAP()

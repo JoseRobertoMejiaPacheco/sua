@@ -137,12 +137,12 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
     @api.model
     def create(self, values):
         res =  super(SUAMov, self).create(self.remove_spaces_and_upper_case(values))
-        res._check_tipo_de_movimiento()
+        # res._check_tipo_de_movimiento()
 
     @api.multi
     def write(self, values):
         res = super(SUAMov, self).write(self.remove_spaces_and_upper_case(values))
-        self._check_tipo_de_movimiento()
+        # self._check_tipo_de_movimiento()
         return res
 
     @api.multi

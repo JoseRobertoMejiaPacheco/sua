@@ -63,7 +63,7 @@ class SUAMovCr(models.Model):
     def _compute_dias_de_la_incidencia_formato_sua(self):
         self.dias_de_la_incidencia_formato_sua = self.fill_empty_or_incomplete(FILLZERO,LONG2,REPLACELEFT,self.dias_de_la_incidencia or FILLEMPTY)
      
-    @api.constrains('')
+    @api.constrains('numero_de_credito_infonavit')
     def _check_(self):
         self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
 
