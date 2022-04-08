@@ -38,27 +38,34 @@ DEFAULT_NUMERO_CREDITO_INFONAVIT='          '
 
 
 
-class SUAMov(models.Model):
-    _name = 'sua.mov'
-    _description = 'Formato del Archivo de Importación de Movimientos de Trabajadores MOVS.txt'
+class SUAMovCr(models.Model):
+    _name = 'sua.mov.cr'
+    _description = 'Formato del Archivo de Importación de Movimientos de Crédito SUAMOVCR.txt'
     registro_patronal_imss = fields.Char(string='Registro Patronal',default= lambda self: self.env.user.company_id.registro_patronal or FILLSPACE,size=LONG11)
     numero_de_seguridad_social = fields.Char(string='Número de Seguridad Social',size=LONG11)
-    tipo_de_movimiento = fields.Selection(string='Tipo de Movimiento', selection=[('02', 'Baja'), ('07', 'Modificación de Salario'),
-    ('08', 'Reingreso'),('09', 'Aportación Voluntaria'),('11', 'Ausentismo'),('12', 'Incapacidad')])
-    fecha_de_movimiento = fields.Char(string='Fecha del Movimiento',size=LONG8)
-    folio_de_incapacidad = fields.Char(string='Folio de Incapacidad',size=LONG8)
-    dias_de_la_incidencia = fields.Char(string='Días de la Incidencia',size=LONG2)
-    dias_de_la_incidencia_formato_sua = fields.Char(compute='_compute_dias_de_la_incidencia_formato_sua', string='Días de Incidencia Formato SUA')
-    salario_diario_integrado = fields.Char(string='Salario Diario Integrado',size=LONG7,help="""El Salario Diario Integrado (5 enteros y 2 decimales) debe grabarse SIN punto decimal y rellenando con ceros a la
-izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
-    salario_diario_integrado_sua = fields.Char(compute='_compute_salario_diario_integrado_sua',string='Salario Diario Integrado Formato SUA o Aportacion Voluntaria')
+    numero_de_credito_infonavit = fields.Char(string='Número De Crédito Infonavit',default=DEFAULT_NUMERO_CREDITO_INFONAVIT)
+    tipo_de_movimiento = fields.Selection(string='Tipo de Movimiento', selection=[('15', 'Inicio de Crédito de Vivienda (ICV)'), ('16', 'Fecha de Suspensión de Descuento (FS)'),
+    ('17', 'Reinicio de Descuento (RD)'),('18', 'Modificación de Tipo de Descuento (MTD)'),('19', 'Modificación de Valor de Descuento (MVD)'),('20', 'Modificación de Número de Crédito (MND)')])
+    fecha_de_movimiento = fields.Char(string='Fecha de Inicio de Descuento',default=lambda self :self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT))
+    tipo_de_descuento = fields.Selection(
+        string='Tipo de Descuento',
+        selection=[('1', 'Porcentaje'),('2', 'Cuota Fija Monetaria'),('3', 'Factor de descuento'),('0', 'No Aplica')],
+        default='0'
+    )
+    valor_de_descuento = fields.Char(string='Valor De Descuento',default=lambda self :self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT),help="""
+    1 Porcentaje (00EEDD00, dos enteros y dos decimales)
+2 Cuota Fija Monetaria (EEEEEDD0, cinco enteros y dos decim ales)
+3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)""")
+    aplica_tabla_disminucion_de_porcentaje = fields.Selection(string='Aplica Tabla Disminución de %', selection=[('S', 'Si'), ('N', 'No')])
     complete_row_afil = fields.Char(string='Registro Completo para Formato SUA Movs.txt')
-    
     
     @api.depends('dias_de_la_incidencia')
     def _compute_dias_de_la_incidencia_formato_sua(self):
         self.dias_de_la_incidencia_formato_sua = self.fill_empty_or_incomplete(FILLZERO,LONG2,REPLACELEFT,self.dias_de_la_incidencia or FILLEMPTY)
      
+    @api.constrains('')
+    def _check_(self):
+        self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
 
     @api.constrains('salario_diario_integrado_sua')
     def _check_long_7(self):
@@ -84,7 +91,25 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
     def _check_registro_patronal_imss(self):
         self.__ev_long(LONG11,self.registro_patronal_imss,self._fields['registro_patronal_imss'])
 
-
+    @api.one
+    @api.depends('valor_de_descuento','tipo_de_descuento')
+    def _compute_valor_de_descuento(self):
+        if self.tipo_de_descuento=='1':
+            if len(self.valor_de_descuento) == LONG4:
+                self.valor_de_descuento_sua=FILLZERO*2+self.valor_de_descuento+FILLZERO*2
+        elif self.tipo_de_descuento=='2':
+            if len(self.valor_de_descuento) == LONG7:
+                self.valor_de_descuento_sua = self.valor_de_descuento+FILLZERO
+        elif self.tipo_de_descuento=='3':
+            if len(self.valor_de_descuento) == LONG7:
+                self.valor_de_descuento_sua=FILLZERO+self.valor_de_descuento
+        else:
+            self.valor_de_descuento
+            self.valor_de_descuento_sua =self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)
+            self.fecha_de_inicio_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT)            
+            self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
+            self.tipo_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
+            self.valor_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
     
     @api.depends('salario_diario_integrado')
     def _compute_salario_diario_integrado_sua(self):
@@ -176,5 +201,16 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
             if self.salario_diario_integrado_sua==(FILLZERO*7):
                 raise ValidationError("El Campo salario_diario_integrado_sua es requerido para el tipo de movimiento"+self.tipo_de_movimiento)
 
-            
+    @api.one
+    def _check_constrains_numero_de_credito_infonavit(self):
+        """Constrains for main numero_de_credito_infonavit
+        and derivated constains fecha_de_movimiento,
+        tipo_de_descuento, valor_de_descuento which
+        only must be considerated when numero_de_credito_infonavit isn't empty."""
+        """No asignar en constrains crea recursividad"""   
+
+        self.__ev_long(LONG10,self.numero_de_credito_infonavit,self._fields['numero_de_credito_infonavit'])
+        self.__ev_long(LONG8,self.fecha_de_movimiento,self._fields['fecha_de_movimiento'])
+        self.__ev_long(LONG1,self.tipo_de_descuento,self._fields['tipo_de_descuento'])
+        self.__ev_long(LONG8,self.valor_de_descuento_sua,self._fields['valor_de_descuento_sua'])       
     
