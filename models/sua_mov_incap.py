@@ -46,10 +46,12 @@ class SUAMovIncap(models.Model):
     tipo_de_incidencia = fields.Char(string='Tipo de Incidencia',default='1')
     fecha_de_inicio = fields.Char(string='Fecha de Alta')
     folio = fields.Char(string='Folio de Incapacidad',size=LONG8)
-    dias_subsidiados = fields.Char(string='Días Subsidiados',size=LONG3)
-    rama_de_incapacidad = fields.Char(string='Rama de Incapacidad')
-    tipo_de_riesgo = fields.Char(string='Tipo de Riesgo')
-    secuela_o_consecuencia = fields.Char(string='Secuela o Consecuencia')
+    dias_subsidiados = fields.Char(string='Días Subsidiados',size=LONG3)    
+    rama_de_incapacidad = fields.Selection(string='Rama de Incapacidad', selection=[('1', 'Riesgo de Trabajo'), ('2', 'Enfermedad General'),('3', 'Maternidad'),('4', 'Licencia 140 Bis')])    
+    tipo_de_riesgo = fields.Selection(string='Tipo de Riesgo', selection=[('1', 'Accidente de Trabajo'), ('2', 'Accidente de Trayecto'), ('3', 'Enfermedad Profesional')])    
+    secuela_o_consecuencia = fields.Selection(string='Secuela o Consecuencia', selection=[('0', 'Ninguna'), ('1', 'Incapacidad Temporal'),('2', 'Valuación Provisional'),
+    ('3', 'Valuación Definitiva'),('4', 'Defunción'),('5', 'Recaída'),('6', 'Valuación Posterior a la Fecha de Alta'),('7', 'Reevaluación Profesional'),
+    ('8', 'Recaída sin Alta Médica'),('9', 'Reevaluación Definitiva')])
     control_de_incapacidad = fields.Char(string='Control de Incapacidad')
     fecha_de_termino = fields.Char(string='Fecha de Término')
 
