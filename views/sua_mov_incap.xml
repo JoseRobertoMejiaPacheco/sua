@@ -11,7 +11,7 @@
             </field>
         </record>
 
-        <record id="sua_mov_cr_action" model="ir.actions.act_window">
+        <record id="sua_mov_incap_action" model="ir.actions.act_window">
             <field name="name">Formulario de Incapacidades SUA</field>
             <field name="res_model">sua.mov.incap</field>
             <field name="view_type">form</field>

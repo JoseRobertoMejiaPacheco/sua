@@ -32,6 +32,7 @@
         'views/sua_afil.xml',
         'views/sua_mov.xml',
         'views/sua_mov_cr.xml',
+        'views/sua_mov_incap.xml',
         'data/sua.estados.csv',
         
 
