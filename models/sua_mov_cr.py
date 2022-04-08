@@ -151,7 +151,6 @@ class SUAMovCr(models.Model):
         return dict
 
     def remove_spaces_alum(self,string,key=False):
-        print(key)
         if string.isalnum():
             if key in FIELDS_TO_STRIP:
                 string = string.strip()            
@@ -201,3 +200,11 @@ class SUAMovCr(models.Model):
         self.__ev_long(LONG1,self.tipo_de_descuento,self._fields['tipo_de_descuento'])
         self.__ev_long(LONG8,self.valor_de_descuento_sua,self._fields['valor_de_descuento_sua'])       
     
+
+
+    """
+    Si el Tipo de Descuento capturado es porcentaje, habilita el campo Aplica Tabla de Disminución %, si el Tipo de Descuento capturado
+es Cuota Fija o Factor de Descuento habilita la opción actualizar.
+
+La fecha de movimiento debe ser del primer día del bimestre.
+"""
