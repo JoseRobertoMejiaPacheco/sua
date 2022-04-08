@@ -204,12 +204,11 @@ class SUAAseg(models.Model):
     def remove_spaces_alum(self,string,key=False):
         if string.isalnum():
             if key in FIELDS_TO_STRIP:
-                return string.strip()            
+                string = string.strip()            
         else:
             if key in FIELDS_TO_STRIP:
-                return string.strip()
-            else:
-                return string
+                string = string.strip()
+        return string
 
     @api.one
     def get_complete_row_aseg(self):
