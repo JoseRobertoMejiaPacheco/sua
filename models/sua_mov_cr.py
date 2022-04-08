@@ -30,9 +30,9 @@ NAME_SEPARATOR = '$'
 FIELDS_TO_UPPER_CASE=[
     'registro_patronal_imss','reg_fed_de_contribuyentes','curp',
     'nombre','apellido_paterno','apellido_materno',
-    'nombre_apellidopaterno_materno_nombre',
+    'nombre_apellidopaterno_materno_nombre','aplica_tabla_disminucion_de_porcentaje',
     'clave_de_ubicacion','clave_de_municipio','clave_lugar_de_nacimiento','sexo']
-FIELDS_TO_STRIP=['registro_patronal_imss','reg_fed_de_contribuyentes','curp',
+FIELDS_TO_STRIP=['registro_patronal_imss','reg_fed_de_contribuyentes','curp','aplica_tabla_disminucion_de_porcentaje',
     'nombre','apellido_paterno','apellido_materno','clave_de_municipio','ocupacion','clave_lugar_de_nacimiento','sexo','salario_diario_integrado_sua']
 DEFAULT_NUMERO_CREDITO_INFONAVIT='          '
 
@@ -151,30 +151,30 @@ class SUAMovCr(models.Model):
         return dict
 
     def remove_spaces_alum(self,string,key=False):
+        print(key)
         if string.isalnum():
             if key in FIELDS_TO_STRIP:
-                return string.strip()            
+                string = string.strip()            
         else:
             if key in FIELDS_TO_STRIP:
-                return string.strip()
-            else:
-                return string
+                string = string.strip()
+        return string
 
     @api.model
     def create(self, values):
-        res =  super(SUAMov, self).create(self.remove_spaces_and_upper_case(values))
-        res._check_tipo_de_movimiento()
+        return  super(SUAMovCr, self).create(self.remove_spaces_and_upper_case(values))
+       
 
     @api.multi
     def write(self, values):
-        res = super(SUAMov, self).write(self.remove_spaces_and_upper_case(values))
-        self._check_tipo_de_movimiento()
+        res = super(SUAMovCr, self).write(self.remove_spaces_and_upper_case(values))
+        
         return res
 
     @api.multi
     def get_full_row_MOV(self):
-        return self.registro_patronal_imss+self.numero_de_seguridad_social+self.tipo_de_movimiento+self.fecha_de_movimiento+\
-            self.fill_empty_or_incomplete(FILLSPACE,LONG8,REPLACELEFT,self.folio_de_incapacidad or FILLEMPTY)+self.dias_de_la_incidencia_formato_sua+self.salario_diario_integrado_sua
+        return self.registro_patronal_imss+self.numero_de_seguridad_social+self.numero_de_credito_infonavit+self.tipo_de_movimiento+self.fecha_de_movimiento+\
+            self.tipo_de_descuento+self.valor_de_descuento+self.aplica_tabla_disminucion_de_porcentaje
 
 
     @api.one
@@ -187,19 +187,6 @@ class SUAMovCr(models.Model):
         print(len(self.get_complete_row_afil()))
 
     
-    @api.one
-    def _check_tipo_de_movimiento(self):
-        if self.tipo_de_movimiento in ['12']:
-            if self.folio_de_incapacidad==(FILLSPACE*8):
-                raise ValidationError("El Campo folio_de_incapacidad es requerido para el tipo de movimiento"+self.tipo_de_movimiento)  
-
-        if self.tipo_de_movimiento in ['12','11']:
-            if self.dias_de_la_incidencia_formato_sua==(FILLZERO*2):
-                raise ValidationError("El Campo dias_de_la_incidencia_formato_sua es requerido para el tipo de movimiento"+self.tipo_de_movimiento)
-
-        if self.tipo_de_movimiento in ['07','08']:
-            if self.salario_diario_integrado_sua==(FILLZERO*7):
-                raise ValidationError("El Campo salario_diario_integrado_sua es requerido para el tipo de movimiento"+self.tipo_de_movimiento)
 
     @api.one
     def _check_constrains_numero_de_credito_infonavit(self):
