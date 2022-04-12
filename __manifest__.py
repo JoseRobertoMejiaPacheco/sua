@@ -20,7 +20,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','hr_contract'],
+    'depends': ['base','hr_contract','nomina_cfdi_extras'],
 
     # always loaded
     'data': [
@@ -33,6 +33,7 @@
         'views/sua_mov.xml',
         'views/sua_mov_cr.xml',
         'views/sua_mov_incap.xml',
+        'views/incidencias_nomina.xml',
         'data/sua.estados.csv',
         
 

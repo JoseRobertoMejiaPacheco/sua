@@ -59,14 +59,16 @@ class SUAMovCr(models.Model):
     aplica_tabla_disminucion_de_porcentaje = fields.Selection(string='Aplica Tabla Disminución de %', selection=[('S', 'Si'), ('N', 'No')])
     complete_row_afil = fields.Char(string='Registro Completo para Formato SUA Movs.txt')
     
+    @api.one
     @api.depends('dias_de_la_incidencia')
     def _compute_dias_de_la_incidencia_formato_sua(self):
         self.dias_de_la_incidencia_formato_sua = self.fill_empty_or_incomplete(FILLZERO,LONG2,REPLACELEFT,self.dias_de_la_incidencia or FILLEMPTY)
-     
+    
+    @api.one
     @api.constrains('numero_de_credito_infonavit')
     def _check_(self):
         self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
-
+    @api.one
     @api.constrains('salario_diario_integrado_sua')
     def _check_long_7(self):
         self.__ev_long(LONG7,self.salario_diario_integrado_sua,self._fields['salario_diario_integrado_sua'])
@@ -110,7 +112,8 @@ class SUAMovCr(models.Model):
             self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
             self.tipo_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
             self.valor_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
-    
+            
+    @api.one
     @api.depends('salario_diario_integrado')
     def _compute_salario_diario_integrado_sua(self):
         if self.salario_diario_integrado:

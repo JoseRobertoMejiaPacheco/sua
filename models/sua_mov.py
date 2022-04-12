@@ -41,12 +41,13 @@ DEFAULT_NUMERO_CREDITO_INFONAVIT='          '
 class SUAMov(models.Model):
     _name = 'sua.mov'
     _description = 'Formato del Archivo de Importación de Movimientos de Trabajadores MOVS.txt'
-    registro_patronal_imss = fields.Char(string='Registro Patronal',default= lambda self: self.env.user.company_id.registro_patronal or FILLSPACE,size=LONG11)
-    numero_de_seguridad_social = fields.Char(string='Número de Seguridad Social',size=LONG11)
-    tipo_de_movimiento = fields.Selection(string='Tipo de Movimiento', selection=[('02', 'Baja'), ('07', 'Modificación de Salario'),
+    registro_patronal_imss = fields.Char(string='Registro Patronal',required=True,default= lambda self: self.env.user.company_id.registro_patronal or FILLSPACE,size=LONG11)
+    numero_de_seguridad_social = fields.Char(string='Número de Seguridad Social',required=True,size=LONG11)
+    tipo_de_movimiento = fields.Selection(string='Tipo de Movimiento',required=True, selection=[('02', 'Baja'), ('07', 'Modificación de Salario'),
     ('08', 'Reingreso'),('09', 'Aportación Voluntaria'),('11', 'Ausentismo'),('12', 'Incapacidad')])
-    fecha_de_movimiento = fields.Char(string='Fecha del Movimiento',size=LONG8)
+    fecha_de_movimiento = fields.Char(string='Fecha del Movimiento',required=True,size=LONG8)
     folio_de_incapacidad = fields.Char(string='Folio de Incapacidad',size=LONG8)
+    folio_de_incapacidad_formato_sua = fields.Char(compute='_compute_folio_de_incapacidad_formato_sua', string='Folio de Incapaciad Formato SUA')
     dias_de_la_incidencia = fields.Char(string='Días de la Incidencia',size=LONG2)
     dias_de_la_incidencia_formato_sua = fields.Char(compute='_compute_dias_de_la_incidencia_formato_sua', string='Días de Incidencia Formato SUA')
     salario_diario_integrado = fields.Char(string='Salario Diario Integrado',size=LONG7,help="""El Salario Diario Integrado (5 enteros y 2 decimales) debe grabarse SIN punto decimal y rellenando con ceros a la
@@ -55,14 +56,23 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
     complete_row_afil = fields.Char(string='Registro Completo para Formato SUA Movs.txt')
     
     
+    
+    @api.depends('folio_de_incapacidad')
+    def _compute_folio_de_incapacidad_formato_sua(self):
+        if not self.folio_de_incapacidad:
+            self.folio_de_incapacidad_formato_sua = self.fill_empty_or_incomplete(FILLSPACE,LONG8,REPLACELEFT,self.folio_de_incapacidad or FILLEMPTY)
+            print(len(self.folio_de_incapacidad_formato_sua))
+        elif self.folio_de_incapacidad:
+            self.folio_de_incapacidad_formato_sua = self.folio_de_incapacidad
+    
     @api.depends('dias_de_la_incidencia')
     def _compute_dias_de_la_incidencia_formato_sua(self):
         self.dias_de_la_incidencia_formato_sua = self.fill_empty_or_incomplete(FILLZERO,LONG2,REPLACELEFT,self.dias_de_la_incidencia or FILLEMPTY)
      
 
-    @api.constrains('salario_diario_integrado_sua')
+    @api.constrains('salario_diario_integrado')
     def _check_long_7(self):
-        self.__ev_long(LONG7,self.salario_diario_integrado_sua,self._fields['salario_diario_integrado_sua'])
+        self.__ev_long(LONG7,self.salario_diario_integrado_sua,self._fields['salario_diario_integrado'])
 
     @api.one
     @api.constrains('fecha_de_movimiento')
@@ -72,7 +82,7 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
     @api.one
     @api.constrains('folio_de_incapacidad')
     def _check_folio_de_incapacidad(self):
-        self.__ev_long(LONG8,self.folio_de_incapacidad,self._fields['folio_de_incapacidad'])
+        self.__ev_long(LONG8,self.folio_de_incapacidad_formato_sua,self._fields['folio_de_incapacidad'])
 
     @api.one
     @api.constrains('numero_de_seguridad_social')
@@ -101,8 +111,6 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
         if len(original_char)==long:
             return original_char
         elif position=="left":
-            a = original_char.rjust(long,char_to_fill)
-            print(a)
             return original_char.rjust(long,char_to_fill)
         elif position=="right":
             return original_char.ljust(long,char_to_fill)  
@@ -161,19 +169,9 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
         print(len(self.get_complete_row_afil()))
 
     
-    @api.one
-    def _check_tipo_de_movimiento(self):
-        if self.tipo_de_movimiento in ['12']:
-            if self.folio_de_incapacidad==(FILLSPACE*8):
-                raise ValidationError("El Campo folio_de_incapacidad es requerido para el tipo de movimiento"+self.tipo_de_movimiento)  
 
-        if self.tipo_de_movimiento in ['12','11']:
-            if self.dias_de_la_incidencia_formato_sua==(FILLZERO*2):
-                raise ValidationError("El Campo dias_de_la_incidencia_formato_sua es requerido para el tipo de movimiento"+self.tipo_de_movimiento)
-
-        if self.tipo_de_movimiento in ['07','08']:
-            if self.salario_diario_integrado_sua==(FILLZERO*7):
-                raise ValidationError("El Campo salario_diario_integrado_sua es requerido para el tipo de movimiento"+self.tipo_de_movimiento)
+    
+    
 
             
     

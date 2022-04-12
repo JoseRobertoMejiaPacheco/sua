@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data>
+        <record id="sua.form_incidencias_nomina_view" model="ir.ui.view">
+            <field name="name">Incidencias Nómina (SUA/IDSE)</field>
+            <field name="model">incidencias.nomina</field>
+            <field name="inherit_id" ref="nomina_cfdi_extras.form_incidencias_nomina_view" />
+            <field name="arch" type="xml">
+                <xpath expr="//form/sheet" position="inside">
+                    <field name="sua_mov_id" options="{'create': false,'edit': false,'delete': false,'create_edit': false}" attrs="{'invisible': [('tipo_de_incidencia','not in',('Cambio salario'))]}"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

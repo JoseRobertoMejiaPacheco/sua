@@ -7,5 +7,6 @@ from . import sua_estados
 from . import sua_mov
 from . import sua_mov_cr
 from . import sua_mov_incap
+from . import incidencias_nomina
 
 #https://kanakinfosystems.com/blog/odoo-manifest-file-decoded
