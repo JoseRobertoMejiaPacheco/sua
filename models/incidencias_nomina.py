@@ -13,7 +13,7 @@ class IncidenciasNomina(models.Model):
         x = fields.Datetime.from_string(self.fecha).strftime("%d%m%Y")
         print(x)
         print(type(x))
-        vals_base = {'registro_patronal_imss':employee.registro_patronal,                                   
+        vals_base = {'registro_patronal_imss':employee.company_id.registro_patronal,                                   
                                     'numero_de_seguridad_social':employee.segurosocial,
                                     'tipo_de_movimiento':'07',
                                     'fecha_de_movimiento':fields.Datetime.from_string(self.fecha).strftime("%d%m%Y")}
