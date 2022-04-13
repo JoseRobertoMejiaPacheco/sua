@@ -36,8 +36,12 @@ class IncidenciasNomina(models.Model):
                                                                    'sueldo_liquidacion_4g': self.calculate_sueldo_liquidacion_4g(),
                                                                    })
                                                                 
-                    vals_base.update({'salario_diario_integrado_sua':self.sueldo_diario_integrado})
-                    self.sua_mov_id = [(0, 0, { vals_base }) ]
+                    vals_base.update({'salario_diario_integrado':str(self.sueldo_diario_integrado)})
+                    rec = self.sua_mov_id.create(vals_base)
+                    rec.get_complete_row_afil()
+                    self.sua_mov_id = rec.id
+                    print(self.sua_mov_id)
+
             elif self.tipo_de_incidencia=='Baja':
                 employee.write({'active':False})
                 if employee.contract_ids:

@@ -181,6 +181,7 @@ class SUAAseg(models.Model):
         """"update values for new"""
         res= super(SUAAseg, self).write(self.remove_spaces_and_upper_case(values))
         self._check_constrains_numero_de_credito_infonavit()
+        return res
      
     
     def remove_spaces_and_upper_case(self,dict):

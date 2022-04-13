@@ -56,7 +56,7 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
     complete_row_afil = fields.Char(string='Registro Completo para Formato SUA Movs.txt')
     
     
-    
+    @api.one
     @api.depends('folio_de_incapacidad')
     def _compute_folio_de_incapacidad_formato_sua(self):
         if not self.folio_de_incapacidad:
@@ -64,7 +64,8 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
             print(len(self.folio_de_incapacidad_formato_sua))
         elif self.folio_de_incapacidad:
             self.folio_de_incapacidad_formato_sua = self.folio_de_incapacidad
-    
+
+    @api.one
     @api.depends('dias_de_la_incidencia')
     def _compute_dias_de_la_incidencia_formato_sua(self):
         self.dias_de_la_incidencia_formato_sua = self.fill_empty_or_incomplete(FILLZERO,LONG2,REPLACELEFT,self.dias_de_la_incidencia or FILLEMPTY)
@@ -95,7 +96,7 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
         self.__ev_long(LONG11,self.registro_patronal_imss,self._fields['registro_patronal_imss'])
 
 
-    
+    @api.one
     @api.depends('salario_diario_integrado')
     def _compute_salario_diario_integrado_sua(self):
         if self.salario_diario_integrado:
@@ -145,7 +146,7 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
     @api.model
     def create(self, values):
         res =  super(SUAMov, self).create(self.remove_spaces_and_upper_case(values))
-        # res._check_tipo_de_movimiento()
+        return res
 
     @api.multi
     def write(self, values):
@@ -163,10 +164,10 @@ izquierda (ejemplo: para el salario 150.45, se debe asignar 0015045).""")
     def get_complete_row_afil(self):
         self.complete_row_afil=self.get_full_row_MOV()
 
-    @api.one
-    def unlink(self):
-        print(self.get_complete_row_afil())
-        print(len(self.get_complete_row_afil()))
+    # @api.one
+    # def unlink(self):
+    #     print(self.get_complete_row_afil())
+    #     print(len(self.get_complete_row_afil()))
 
     
 

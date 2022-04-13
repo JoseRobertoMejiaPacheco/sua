@@ -142,6 +142,7 @@ class SUAMovIncap(models.Model):
         """"update values for new"""
         res= super(SUAMovIncap, self).write(self.remove_spaces_and_upper_case(values))
         # self._check_constrains_numero_de_credito_infonavit()
+        return res
      
     @api.one
     def unlink(self):

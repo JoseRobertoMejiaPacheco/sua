@@ -112,7 +112,7 @@ class SUAMovCr(models.Model):
             self.numero_de_credito_infonavit = self.fill_empty_or_incomplete(FILLSPACE,LONG10,REPLACERIGHT)
             self.tipo_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
             self.valor_de_descuento = self.fill_empty_or_incomplete(FILLZERO,LONG1,REPLACERIGHT)
-            
+
     @api.one
     @api.depends('salario_diario_integrado')
     def _compute_salario_diario_integrado_sua(self):
@@ -210,4 +210,8 @@ class SUAMovCr(models.Model):
 es Cuota Fija o Factor de Descuento habilita la opción actualizar.
 
 La fecha de movimiento debe ser del primer día del bimestre.
+"""
+
+"""
+En los campos del tipo depends se predefine api.multi a pesar de escribir api.one
 """
