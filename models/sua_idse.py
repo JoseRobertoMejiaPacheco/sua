@@ -66,15 +66,20 @@ class Idse(models.Model):
     curp = fields.Char(string='CURP')
     identificador_del_formato = fields.Char(string='Identificador del Formato')
     
+    @api.one
     @api.depends('numero_de_seguridad_social')
     def _compute_digito_verificador_de_seguridad_social(self):
-        if len(self.numero_de_seguridad_social)==LONG11:
-            self.digito_verificador_numero_de_seguridad_social=self.numero_de_seguridad_social[-1]
+        #Verificar simpre que no sean False
+        if self.numero_de_seguridad_social:
+            if len(self.numero_de_seguridad_social)==LONG11:
+                self.digito_verificador_numero_de_seguridad_social=self.numero_de_seguridad_social[-1]
 
+    @api.one
     @api.depends('registro_patronal_imss')
     def _compute_digito_verificador_de_registro_patronal(self):
-        if len(self.numero_de_seguridad_social)==LONG11:
-            self.digito_verificador_registro_patronal=self.registro_patronal_imss[-1]
+        if self.numero_de_seguridad_social: #Cambiar en otros 
+            if len(self.numero_de_seguridad_social)==LONG11:
+                self.digito_verificador_registro_patronal=self.registro_patronal_imss[-1]
 
     @api.one
     @api.depends('nombre','apellido_paterno','apellido_materno')

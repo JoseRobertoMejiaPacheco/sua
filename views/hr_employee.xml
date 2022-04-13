@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data>
+        <record id="view_employee_form_inherit_sua" model="ir.ui.view">
+            <field name="name">hr.employee.view.form.inherit</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form" />
+            <field name="arch" type="xml">
+                <field name="name" position="after">
+                    <group class="fs-6 font-weight-bold">
+                        <div>
+                        <h4><field name="names" placeholder="Nombre(s) Separados Por Espacios" class="fs-6 font-weight-bold" style="text-transform:uppercase" /></h4>
+                        <h4><field name="first_name" placeholder="Primer Apellido" class="fs-6 font-weight-bold" style="text-transform:uppercase"/></h4>
+                        <h4><field name="second_name" placeholder="Segundo Apellido" class="fs-6 font-weight-bold" style="text-transform:uppercase" /></h4>
+                    </div>
+                    </group>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>
