@@ -34,6 +34,7 @@
         'views/sua_mov_cr.xml',
         'views/sua_mov_incap.xml',
         'views/incidencias_nomina.xml',
+        'views/sua_idse.xml',
         'data/sua.estados.csv',
         
 

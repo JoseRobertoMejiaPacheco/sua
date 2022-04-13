@@ -66,7 +66,7 @@ class SUAAfil(models.Model):
         if len(self.numero_de_seguridad_social)==LONG11:
             self.digito_verificador_numero_de_seguridad_social=self.numero_de_seguridad_social[-1]
     
-    @api.depends('numero_de_seguridad_social')
+    @api.depends('registro_patronal_imss')
     def _compute_digito_verificador_de_registro_patronal(self):
         if len(self.numero_de_seguridad_social)==LONG11:
             self.digito_verificador_registro_patronal=self.registro_patronal_imss[-1]    
