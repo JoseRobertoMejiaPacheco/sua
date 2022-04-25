@@ -51,12 +51,12 @@ class SUAAseg(models.Model):
     nombre_apellidopaterno_materno_nombre = fields.Char(compute='_compute_nombre_apellidopaterno_materno_nombre', string='Nombre Completo Formato SUA')        
     tipo_de_trabajador = fields.Selection(
         string='Tipo de Trabajador',
-        selection=[('1', 'Trab. permanente'), ('2', ' Trab. Ev. Ciudad'),('3', 'Trab. Ev. Construcción'),('4', 'Eventual del campo')]
+        selection=[('1', 'Trab. permanente'), ('2', ' Trab. Ev. Ciudad'),('3', 'Trab. Ev. Construcción'),('4', 'Eventual del campo')],default='1'
     )
     jornada_semana_reducida = fields.Selection(
         string='Jornada/Semana Reducida',
         selection=[('1', 'Un día'), ('2', 'Dos dias'),('3', 'Trab. Ev. Construcción'),('4', 'Cuatros días'),
-        ('5', 'Cinco días'),('6', 'Seis días'),('0', 'Jornada Normal')]
+        ('5', 'Cinco días'),('6', 'Seis días'),('0', 'Jornada Normal')],default='0'
     )    
     fecha_de_alta = fields.Char(string='Fecha de Alta')
     salario_diario_integrado = fields.Char(string='Salario Diario Integrado')

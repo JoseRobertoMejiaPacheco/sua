@@ -9,10 +9,30 @@
                 <field name="name" position="after">
                     <group class="fs-6 font-weight-bold">
                         <div>
-                        <h4><field name="names" placeholder="Nombre(s) Separados Por Espacios" class="fs-6 font-weight-bold" style="text-transform:uppercase" /></h4>
-                        <h4><field name="first_name" placeholder="Primer Apellido" class="fs-6 font-weight-bold" style="text-transform:uppercase"/></h4>
-                        <h4><field name="second_name" placeholder="Segundo Apellido" class="fs-6 font-weight-bold" style="text-transform:uppercase" /></h4>
-                    </div>
+                            <h4>
+                                <field name="names" placeholder="Nombre(s) Separados Por Espacios" class="fs-6 font-weight-bold" style="text-transform:uppercase" />
+                            </h4>
+                            <h4>
+                                <field name="first_name" placeholder="Primer Apellido" class="fs-6 font-weight-bold" style="text-transform:uppercase" />
+                            </h4>
+                            <h4>
+                                <field name="second_name" placeholder="Segundo Apellido" class="fs-6 font-weight-bold" style="text-transform:uppercase" />
+                            </h4>
+                        </div>
+                    </group>
+                </field>
+                <xpath expr="//page[1]" position="after">
+                    <!-- groups="hr.group_hr_user" -->
+                    <page name="sua_movs" string="Movimientos SUA/IDSE">
+                        <group>
+                            <field name="complete_row_afil" />
+                            <field name="complete_row_afil_idse" />
+                        </group>
+                    </page>
+                </xpath>
+                <field name="category_ids" position="after">
+                    <group>                        
+                        <field name="state_sua_idse" widget="state_selection"/>
                     </group>
                 </field>
             </field>

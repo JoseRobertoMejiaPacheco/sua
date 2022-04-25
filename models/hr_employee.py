@@ -1,4 +1,3 @@
-from models.sua_mov_cr import FILLSPACE
 from odoo import _, api, fields, models
 from odoo import tools, _
 
@@ -7,6 +6,12 @@ class Employee(models.Model):
     names = fields.Char(string='Nombre(s)')
     first_name = fields.Char(string='Apellido Paterno')
     second_name = fields.Char(string='Apellido Materno')
+    state_sua_idse = fields.Selection(string='Estado de Registro SUA/IDSE',selection=[
+            ('normal', 'In Progress'),
+            ('blocked', 'Blocked'),
+            ('done', 'Ready for next stage')],default='normal')
+    complete_row_afil = fields.Char(string='Registro Completo para Formato SUA Afil.txt')
+    complete_row_afil_idse = fields.Char(string='Registro Completo para Formato IDSE DISPMAG')
 
     @api.model
     def create(self, vals):
@@ -27,3 +32,24 @@ class Employee(models.Model):
             vals.update({'name':complete_name})
         res = super(Employee, self).write(vals)
         return res
+    
+    @api.one
+    def create_complete_row_afil(self):
+        aseg = self.env['sua.aseg']
+        vals = {
+            'registro_patronal_imss':self.company_id.registro_patronal,
+            'numero_de_seguridad_social':self.segurosocial,
+            'reg_fed_de_contribuyentes':self.rfc,
+            'curp':self.curp,
+            'nombre':self.names,
+            'apellido_paterno':self.first_name,
+            'apellido_materno':self.second_name,
+            'fecha_de_alta':fields.Datetime.from_string(self.contract_id.date_start).strftime("%d%m%Y"),
+            'salario_diario_integrado':self.contract.salario_diario_integrado,
+            'numero_de_credito_infonavit':self.cred_infonavit or '',
+            'fecha_de_inicio_de_descuento':False,
+            'tipo_de_descuento':False,
+            'valor_de_descuento':False,
+            'clave_de_municipio':self.env.user.company_id.registro_patronal[3:]        
+        }
+        

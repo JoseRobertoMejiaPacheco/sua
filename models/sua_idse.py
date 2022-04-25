@@ -35,13 +35,13 @@ class Idse(models.Model):
     _name = 'sua.idse'
     _description = ' IMSS Desde Su Empresa'
 
-    registro_patronal_imss = fields.Char(string='Registro Patronal',default= lambda self: self.env.user.company_id.registro_patronal or FILLSPACE,size=LONG11)
+    registro_patronal_imss = fields.Char(string='Registro Patronal',size=LONG11)
     digito_verificador_registro_patronal = fields.Char(compute='_compute_digito_verificador_de_registro_patronal',string='Dígito Verificador Registro Patronal',size=LONG1)
     numero_de_seguridad_social = fields.Char(string='Número de Seguridad Social',size=LONG11)
     digito_verificador_numero_de_seguridad_social = fields.Char(compute='_compute_digito_verificador_de_seguridad_social',string='Dígito Verificador Número de Seguridad Social')
-    nombre = fields.Char(string='Nombre(s) Separados por Espacio',help='Ejemplo Kaleth Chalino Valentin')
     apellido_paterno = fields.Char(string='Apellido Paterno')
     apellido_materno = fields.Char(string='Apellido Materno')
+    nombre = fields.Char(string='Nombre(s) Separados por Espacio',help='Ejemplo Kaleth Chalino Valentin')
     nombre_apellidopaterno_materno_nombre = fields.Char(compute='_compute_nombre_apellidopaterno_materno_nombre', string='Nombre Completo Formato SUA')
     salario_base_cotizacion = fields.Char(string='Salario Base Cotización')
     filler1 = fields.Char(string='Filler',default='      ')
@@ -64,32 +64,5 @@ class Idse(models.Model):
     clave_de_trabajador = fields.Char(string='Clave del Trabajador')
     filler3 = fields.Char(string='Filler',default=' ')
     curp = fields.Char(string='CURP')
-    identificador_del_formato = fields.Char(string='Identificador del Formato')
+    identificador_del_formato = fields.Char(string='Identificador del Formato',default=9)
     
-    @api.one
-    @api.depends('numero_de_seguridad_social')
-    def _compute_digito_verificador_de_seguridad_social(self):
-        #Verificar simpre que no sean False
-        if self.numero_de_seguridad_social:
-            if len(self.numero_de_seguridad_social)==LONG11:
-                self.digito_verificador_numero_de_seguridad_social=self.numero_de_seguridad_social[-1]
-
-    @api.one
-    @api.depends('registro_patronal_imss')
-    def _compute_digito_verificador_de_registro_patronal(self):
-        if self.numero_de_seguridad_social: #Cambiar en otros 
-            if len(self.numero_de_seguridad_social)==LONG11:
-                self.digito_verificador_registro_patronal=self.registro_patronal_imss[-1]
-
-    @api.one
-    @api.depends('nombre','apellido_paterno','apellido_materno')
-    def _compute_nombre_apellidopaterno_materno_nombre(self):
-        try:                        
-            if not self.apellido_paterno:
-                full_name_formatted=self.apellido_materno+NAME_SEPARATOR+NAME_SEPARATOR+self.nombre
-                self.nombre_apellidopaterno_materno_nombre = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,full_name_formatted)                
-            else:
-                full_name_formatted = self.apellido_paterno+NAME_SEPARATOR+self.apellido_materno+NAME_SEPARATOR+self.nombre
-                self.nombre_apellidopaterno_materno_nombre = self.fill_empty_or_incomplete(FILLSPACE,LONG50,REPLACERIGHT,full_name_formatted)                
-        except Exception as inst:
-            pass
