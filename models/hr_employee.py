@@ -10,9 +10,8 @@ class Employee(models.Model):
             ('normal', 'In Progress'),
             ('blocked', 'Blocked'),
             ('done', 'Ready for next stage')],default='normal')
-    complete_row_afil = fields.Char(string='Registro Completo para Formato SUA Afil.txt')
-    complete_row_afil_idse = fields.Char(string='Registro Completo para Formato IDSE DISPMAG')
-
+    aseg_id = fields.Many2one('sua.aseg', string='Aseg ID')
+    
     @api.model
     def create(self, vals):
         if vals.get('user_id'):
@@ -35,7 +34,7 @@ class Employee(models.Model):
     
     @api.one
     def create_complete_row_afil(self):
-        aseg = self.env['sua.aseg']
+        
         vals = {
             'registro_patronal_imss':self.company_id.registro_patronal,
             'numero_de_seguridad_social':self.segurosocial,
@@ -45,11 +44,12 @@ class Employee(models.Model):
             'apellido_paterno':self.first_name,
             'apellido_materno':self.second_name,
             'fecha_de_alta':fields.Datetime.from_string(self.contract_id.date_start).strftime("%d%m%Y"),
-            'salario_diario_integrado':self.contract.salario_diario_integrado,
-            'numero_de_credito_infonavit':self.cred_infonavit or '',
-            'fecha_de_inicio_de_descuento':False,
-            'tipo_de_descuento':False,
-            'valor_de_descuento':False,
-            'clave_de_municipio':self.env.user.company_id.registro_patronal[3:]        
+            'salario_diario_integrado':"{:.2f}".format((self.contract_id.sueldo_diario_integrado)) ,
+            'numero_de_credito_infonavit':self.cred_infonavit or '0000000000',
+            'fecha_de_inicio_de_descuento':'00000000', #usar or para la fecha de inicio de descuento
+            'tipo_de_descuento':  '0',#usar or            
+            'clave_de_municipio':self.env.user.company_id.registro_patronal[:3]        
         }
+        aseg = self.env['sua.aseg'].create(vals)
+        self.aseg_id = aseg.id
         

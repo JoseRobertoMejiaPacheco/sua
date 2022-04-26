@@ -71,13 +71,13 @@ class SUAAseg(models.Model):
     )
     valor_de_descuento = fields.Char(string='Valor De Descuento',default=lambda self :self.fill_empty_or_incomplete(FILLZERO,LONG8,REPLACERIGHT),help="""
     1 Porcentaje (00EEDD00, dos enteros y dos decimales)
-2 Cuota Fija Monetaria (EEEEEDD0, cinco enteros y dos decim ales)
-3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)""")
+    2 Cuota Fija Monetaria (EEEEEDD0, cinco enteros y dos decim ales)
+    3 Factor de Descuento (0EEEDDDD, tres enteros y cuatro decim ales)""")
     valor_de_descuento_sua = fields.Char(compute='_compute_valor_de_descuento',string='Valor De Descuento Formato SUA')
     complete_row_aseg = fields.Char(string='Registro Completo para Formato SUA Aseg.txt')
     tipo_de_pension = fields.Selection(
         string='Tipo de Pension',
-        selection=[('0', 'Sin Pensión'),('1', 'Pensión en Invalidez y Vida'),('2', 'Cesantía y Vejez')]
+        selection=[('0', 'Sin Pensión'),('1', 'Pensión en Invalidez y Vida'),('2', 'Cesantía y Vejez')],default='0'
     )
     clave_de_municipio = fields.Char(string='Clave De Municipio',default= lambda self: self.env.user.company_id.registro_patronal[3:])
 

@@ -25,14 +25,16 @@
                     <!-- groups="hr.group_hr_user" -->
                     <page name="sua_movs" string="Movimientos SUA/IDSE">
                         <group>
-                            <field name="complete_row_afil" />
-                            <field name="complete_row_afil_idse" />
+                            <field name="aseg_id" />
                         </group>
                     </page>
                 </xpath>
                 <field name="category_ids" position="after">
-                    <group>                        
-                        <field name="state_sua_idse" widget="state_selection"/>
+                    <group>
+                        <field name="state_sua_idse" widget="state_selection" />
+                    </group>
+                    <group>
+                        <button string="SUA/IDSE" name="create_complete_row_afil" type="object" class="oe_highlight"/>
                     </group>
                 </field>
             </field>
