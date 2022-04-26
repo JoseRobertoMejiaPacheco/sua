@@ -9,13 +9,8 @@ class IncidenciasNomina(models.Model):
     @api.multi
     def action_validar(self):
         employee = self.employee_id
-        
-        x = fields.Datetime.from_string(self.fecha).strftime("%d%m%Y")
-        print(x)
-        print(type(x))
         vals_base = {'registro_patronal_imss':employee.company_id.registro_patronal,                                   
-                                    'numero_de_seguridad_social':employee.segurosocial,
-                                    'tipo_de_movimiento':'07',
+                                    'numero_de_seguridad_social':employee.segurosocial,                                   
                                     'fecha_de_movimiento':fields.Datetime.from_string(self.fecha).strftime("%d%m%Y")}
        
         if employee:
@@ -36,13 +31,16 @@ class IncidenciasNomina(models.Model):
                                                                    'sueldo_liquidacion_4g': self.calculate_sueldo_liquidacion_4g(),
                                                                    })
                                                                 
-                    vals_base.update({'salario_diario_integrado':"{:.2f}".format((self.sueldo_diario_integrado)) })
+                    vals_base.update({'salario_diario_integrado':"{:.2f}".format((self.sueldo_diario_integrado)),'tipo_de_movimiento':'07'})
                     rec = self.sua_mov_id.create(vals_base)
                     rec.get_complete_row_afil()
                     self.sua_mov_id = rec.id
                     print(self.sua_mov_id)
 
             elif self.tipo_de_incidencia=='Baja':
+                vals_base.update({'tipo_de_movimiento':'02' })
+                rec = self.sua_mov_id.create(vals_base)
+                self.sua_mov_id = rec.id
                 employee.write({'active':False})
                 if employee.contract_ids:
                     employee.contract_ids.write({'state':'cancel'})
