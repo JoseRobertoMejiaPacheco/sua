@@ -35,6 +35,7 @@ class IncidenciasNomina(models.Model):
                     rec = self.sua_mov_id.create(vals_base)
                     rec.get_complete_row_afil()
                     self.sua_mov_id = rec.id
+                    
                     print(self.sua_mov_id)
 
             elif self.tipo_de_incidencia=='Baja':
@@ -59,6 +60,10 @@ class IncidenciasNomina(models.Model):
                                                                    'sueldo_base_cotizacion': self.sueldo_cotizacion_base, 'contract_id' : employee.contract_ids[0].id,
                                                                    'sueldo_liquidacion_4g': self.calculate_sueldo_liquidacion_4g(),
                                                                    })
+                    vals_base.update({'salario_diario_integrado':"{:.2f}".format((self.sueldo_diario_integrado)),'tipo_de_movimiento':'08'})
+                    rec = self.sua_mov_id.create(vals_base)
+                    self.sua_mov_id = rec.id
+                    rec.get_complete_row_afil()
         self.state='done'
         return
     

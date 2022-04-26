@@ -7,7 +7,7 @@
             <field name="inherit_id" ref="nomina_cfdi_extras.form_incidencias_nomina_view" />
             <field name="arch" type="xml">
                 <xpath expr="//form/sheet" position="inside">
-                    <field name="sua_mov_id" options="{'create': false,'edit': false,'delete': false,'create_edit': false}" attrs="{'invisible': [('tipo_de_incidencia','not in',('Cambio salario','Baja'))]}"/>
+                    <field name="sua_mov_id" options="{'create': false,'edit': false,'delete': false,'create_edit': false}" attrs="{'invisible': [('tipo_de_incidencia','not in',('Cambio salario','Baja','Reingreso'))]}"/>
                 </xpath>
             </field>
         </record>
