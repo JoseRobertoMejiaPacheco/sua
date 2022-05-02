@@ -31,7 +31,7 @@ class IncidenciasNomina(models.Model):
                                                                    'sueldo_liquidacion_4g': self.calculate_sueldo_liquidacion_4g(),
                                                                    })
                                                                 
-                    vals_base.update({'salario_diario_integrado':"{:.2f}".format((self.sueldo_diario_integrado)),'tipo_de_movimiento':'07'})
+                    vals_base.update({'salario_diario_integrado':self.sua_mov_id.salario_diario_integrado_dos_decimales(self.sueldo_diario_integrado),'tipo_de_movimiento':'07'})
                     rec = self.sua_mov_id.create(vals_base)
                     rec.get_complete_row_afil()
                     self.sua_mov_id = rec.id
@@ -67,3 +67,11 @@ class IncidenciasNomina(models.Model):
         self.state='done'
         return
     
+
+
+    @api.multi
+    def unlink(self):
+        for item in self:
+            if item.sua_mov_id:
+                item.sua_mov_id.unlink()                
+        return models.Model.unlink(self)
